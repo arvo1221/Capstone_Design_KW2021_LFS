@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<JScopeProject>
+    <FileVersion major="1" minor="1" />
+    <Project>
+        <Configuration>
+            <JLink>
+                <Options IsRTTSession="0" IsRTTWithTimeStamp="1" SamplingPeriod="100" Connection="1" SerialNo="0" IP="" TargetDevice="unspecified" TargetInterface="JTAG" InterfaceSpeed="4000" />
+            </JLink>
+            <ElfFile Name="D:\git\Capstone_Design\capstone2\EWARM\capstone2\Exe\capstone2.out" />
+            <DataFile Name="" />
+            <RawFile Name="" />
+            <Scope>
+                <Options TimeResolutionUs="1000000" />
+            </Scope>
+        </Configuration>
+        <Windows>
+            <Graph Show="1" />
+            <Watch Show="1" />
+        </Windows>
+        <SelectedSymbols>
+            <Symbol>
+                <Options Name="watch_degree" Address="0x20000308" Type="short" TypeID="11" Size="2" GraphColorRed="255" GraphColorGreen="215" GraphColorBlue="0" YMinSampled="-32596" YMaxSampled="32400" YAvgSampled="-58" Offset="4" ShowInGraph="1" YOffset="200" IsAutoConfig="1" YResolution="20000" MaxValue="40000" File="D:\git\Capstone_Design\capstone2\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+            <Symbol>
+                <Options Name="watch_repp" Address="0x20000306" Type="short" TypeID="11" Size="2" GraphColorRed="0" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="-30000" YMaxSampled="30000" YAvgSampled="-52" Offset="6" ShowInGraph="1" YOffset="200" IsAutoConfig="1" YResolution="20000" MaxValue="40000" File="D:\git\Capstone_Design\capstone2\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+        </SelectedSymbols>
+    </Project>
+</JScopeProject>
