@@ -79,6 +79,7 @@ volatile double angular_velocity_R = 0;
 volatile double angular_velocity_pre_R = 0;
 volatile double theta = 0;
 volatile uint16_t Motor_CCR_R = 0;
+volatile uint16_t shoot_degree = 0;
 volatile uint32_t timer = 0;
 
 volatile double Kpc = 0.9;//45.5672;
@@ -384,8 +385,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
       Motor_CCR_R = (uint16_t)Motor_PWM;
       //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_RESET);
     }
-    TIM4->CCR1 = Motor_CCR_R;
-    
+    TIM9->CCR1 = Motor_CCR_R;
+    //TIM1->CCR1 = shoot_degree;
+    /*
+    servomotor 20ms prescale 60 count 60000
+    */
     watch_current = 1000*current;
     watch_repc = 1000*rep_current ;
     watch_velocity = 1000*angular_velocity_R;
