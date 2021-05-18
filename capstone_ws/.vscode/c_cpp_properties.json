@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/min/capstone_ws/devel/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/min/capstone_ws/src/src/darknet_ros/darknet_ros/include/**",
+                "/home/min/capstone_ws/src/src/gb_visual_detection_3d/darknet_ros_3d/include/**",
+                "/home/min/capstone_ws/src/src/estimation_pkg/include/**",
+                "/opt/ros/melodic/share/julius/include/**",
+                "/usr/include/**",
+                "${workspaceFolder}/src/estimation_pkg/include"
+            ],
+            "name": "ROS"
+        }
+    ],
+    "version": 4
+}
