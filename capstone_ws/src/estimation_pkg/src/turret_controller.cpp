@@ -1,7 +1,7 @@
 #pragma once
 #include "../include/estimation_pkg/turret_controller.hpp"
 
-turret_controller_interface::turret_controller_interface(ros::NodeHandle nh_,double hz_):
+turret_controller_interface::turret_controller_interface(ros::NodeHandle &nh_,double hz_):
     rate_(hz_),
     position_estimator()
 {
@@ -29,6 +29,7 @@ turret_controller_interface::turret_controller_interface(ros::NodeHandle nh_,dou
     //////     set Thread         /////////////////////////
 
     threads.push_back(std::thread(&KF_drone_estimator::excute_timerThread, &position_estimator));
+    threads.push_back(std::thread(&turret_controller_interface::SerailThread, this));
 }
 
 turret_controller_interface::~turret_controller_interface()
@@ -52,11 +53,22 @@ void turret_controller_interface::vision_cb(const gb_visual_detection_3d_msgs::B
 
     position_estimator.AddObservation(curConfig);
 }
+void turret_controller_interface::SerailThread() {
+    Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();
+    Turret_serial_.m_target.position_P = position_estimator.getTarget_P();
+    Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
+    
+    Turret_serial_.Execute();
+    Camera_serial_.Execute();
 
+}
+
+
+/*
 void turret_controller_interface::object_track()
 {
     //obj tracker Model
-    droneConfig = position_estimator.GetPosition();
+    //droneConfig = position_estimator.GetPosition();
     droneConfig(3) = 1;
 
     // trans form to word Model
@@ -65,8 +77,6 @@ void turret_controller_interface::object_track()
     T_CB.linear() = Eigen::Quaternionf(0,0,0,1).toRotationMatrix();
 
     // droneConfig = T_CB*droneConfig;
-
     double target_pen = -atan2(droneConfig(0),droneConfig(1));
-    double target_tilt = atan2(droneConfig(2),sqrt( pow(droneConfig(0),2) + pow(droneConfig(0),2) ) );
-    
-}
+     
+}*/

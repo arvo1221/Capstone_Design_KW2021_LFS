@@ -29,24 +29,25 @@
 //serial Comm
 #include "../include/estimation_pkg/serialComm/serial_turret.hpp"
 #include "../include/estimation_pkg/serialComm/cserial.h"
-
+#include "../include/estimation_pkg/serialComm/cserial2.h"
 class turret_controller_interface
 {
     public:
 
-    turret_controller_interface(ros::NodeHandle nh_,double hz_);
+    turret_controller_interface(ros::NodeHandle &nh_,double hz_);
     ~turret_controller_interface();
 
     ////////////////methods/////////////////////////////////////////////
-
+    inline void OpenTurretSerial(std::string port, int baudrate) {Turret_serial_.Open(port,baudrate);};
+    inline void OpenCameraSerial(std::string port, int baudrate) {Camera_serial_.Open(port,baudrate);};
+    
 
     //////   rosCallback   //////////////////////////////////////////////
 
     void vision_cb(const gb_visual_detection_3d_msgs::BoundingBoxes3dConstPtr &pose);
-    void object_track();
+   // void object_track();
 
     //////   public params //////////////////////////////////////////////
-
     private:
 
     int thread_num;
@@ -59,11 +60,12 @@ class turret_controller_interface
     KF_drone_estimator position_estimator;
 
     // serial Comm
-    serial_turret serialComm_;
+    cserial Turret_serial_;
+    cserial2 Camera_serial_;
 
     // Thread
     std::vector<std::thread> threads;
-
+    
     /////   ros publisher  //////////////////////////////////////////////
 
     ros::Publisher visualization_pub_;
@@ -86,4 +88,6 @@ class turret_controller_interface
 
     /////   private method /////////////////////////////////////////////
     Eigen::VectorXd droneConfig;
+
+    void SerailThread();
 };

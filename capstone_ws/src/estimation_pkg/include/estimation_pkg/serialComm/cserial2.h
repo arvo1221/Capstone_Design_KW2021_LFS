@@ -1,5 +1,5 @@
-#ifndef CSERIAL_H
-#define CSERIAL_H
+#ifndef CSERIAL2_H
+#define CSERIAL2_H
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -10,10 +10,12 @@
 #include "cstdlib"
 #include "math.h"
 #include "stdio.h"
-#include "../include/estimation_pkg/serialComm/DataType.h"
 #include "../include/estimation_pkg/serialComm/DataType2.h"
 
-class cserial {
+#define Turret    0
+#define Camera    1
+
+class cserial2 {
   // Define ////////////////////////////////////////////////////////
   public:
 
@@ -27,7 +29,7 @@ class cserial {
     // Output	: None
     // Summury	: Standard constructor
     ////////////////////////////////////////////////////////////////////////////////////////////
-    cserial();
+    cserial2();
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +38,7 @@ class cserial {
     // Output	: None
     // Summury	: Standard destructor
     ////////////////////////////////////////////////////////////////////////////////////////////
-    ~cserial();
+    ~cserial2();
 
 
 
@@ -76,18 +78,12 @@ class cserial {
     bool m_Open;
     unsigned char m_recvBuf[4096];
     unsigned char m_writeBuf[4096];
-
-    //Turret's pitch & yaw motor control
-    Packet_t m_sendPacket;
-    Packet_t m_packet;
-
-    ControlData_t m_target, m_current;
     
     //Camera motor & shooting 
-    Packet2_t m_sendPacket2;
-    Packet2_t m_packet2;
+    Packet2_t m_sendPacket;
+    Packet2_t m_packet;
 
-    ControlData2_t m_target2, m_current2;   
+    ControlData2_t m_target, m_current;   
 
   protected:
 

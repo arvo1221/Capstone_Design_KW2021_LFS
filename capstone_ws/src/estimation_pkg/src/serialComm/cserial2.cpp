@@ -1,21 +1,20 @@
-#include "../include/estimation_pkg/serialComm/cserial.h"
+#include "../include/estimation_pkg/serialComm/cserial2.h"
 
-cserial::cserial(){
+cserial2::cserial2(){
   m_target.position_P = 0;
   m_target.velocity_P = 10;
-  m_target.position_Y = 0;
-  m_target.velocity_Y = 10;
+  m_target.shooting = 0;
   m_sendPacket.data.header[0] = m_sendPacket.data.header[1] = m_sendPacket.data.header[2] = m_sendPacket.data.header[3] = 0xFE;
     m_sendPacket.data.id = 1;
     m_sendPacket.data.mode = 2;
-    m_sendPacket.data.size = sizeof(Packet_t);
+    m_sendPacket.data.size = sizeof(Packet2_t);
 }
 
-cserial::~cserial(){
+cserial2::~cserial2(){
 
 }
 
-bool cserial::Open(std::string port, int baudrate){
+bool cserial2::Open(std::string port, int baudrate){
   m_ser.setPort(port);
   m_ser.setBaudrate(baudrate);
   serial::Timeout to = serial::Timeout::simpleTimeout(100);
@@ -25,29 +24,27 @@ bool cserial::Open(std::string port, int baudrate){
   return m_Open;
 }
 
-bool cserial::Close() {
+bool cserial2::Close() {
     m_ser.close();
     m_Open = m_ser.isOpen();
     return m_Open;
 }
 
-void cserial::Execute() {
+void cserial2::Execute() {
   static int mode, readSize = 0, checkSize;
     static unsigned char check;
 
     if (m_ser.isOpen()) {
 
       m_sendPacket.data.check = 0;
-      m_sendPacket.data.pos_Y = m_target.position_Y*1000;
-      m_sendPacket.data.velo_Y = m_target.velocity_Y*1000;
       m_sendPacket.data.pos_P = m_target.position_P*1000;
       m_sendPacket.data.velo_P = m_target.velocity_P*1000;
-
+      m_sendPacket.data.shoot = m_target.shooting;
       //checkbit ����
-      for (int i = 8; i < sizeof(Packet_t); i++)
+      for (int i = 8; i < sizeof(Packet2_t); i++)
         m_sendPacket.data.check += m_sendPacket.buffer[i];
       //packet �߼�
-      m_ser.write(m_sendPacket.buffer, sizeof(Packet_t));
+      m_ser.write(m_sendPacket.buffer, sizeof(Packet2_t));
 
       //receive packet
       readSize = m_ser.read(m_recvBuf, 4096);
@@ -96,14 +93,13 @@ void cserial::Execute() {
            // std::cout << "size ok" << std::endl;
 
             if (check == m_packet.data.check) {			// check bit Ȯ��
-              std::cout << "posY" << m_packet.data.pos_Y << std::endl;
-              std::cout << "veloY" << m_packet.data.velo_Y << std::endl;
+              
 
-
-                m_current.position_Y = m_packet.data.pos_Y / 1000.;		//get Motor Pos
-                m_current.velocity_Y = m_packet.data.velo_Y / 1000.;		//get Motor Vel
                 m_current.position_P = m_packet.data.pos_P / 1000.;		//get Motor Pos
                 m_current.velocity_P = m_packet.data.velo_P / 1000.;		//get Motor Vel
+                m_current.shooting = m_packet.data.shoot;
+                std::cout << "posY" << m_packet.data.pos_P/1000 << std::endl;
+                std::cout << "veloY" << m_packet.data.velo_P/1000 << std::endl;
 
               }
 
@@ -111,6 +107,8 @@ void cserial::Execute() {
             mode = 0;
             checkSize = 0;
             }
+           
+
 
           }
 

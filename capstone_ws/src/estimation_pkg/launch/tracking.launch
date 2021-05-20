@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!--param name="robot_description" textfile="$(find social_robot_description)/urdf/social_robot_right.urdf"/>
+  <param name="urdf_param" value="\robot_description"/--> 
+
+<param name="turret_description" command="$(find xacro)/xacro.py '$(find turret_description)/urdf/panda_arm.urdf.xacro'"/>
+<param name="urdf_param" value="/turret_description"/> 
+
+  <node name="tracking" pkg="estimation_pkg" type="tracking" output="screen" >
+    <param name="yaml_path" type="string" value="$(find estimation_pkg)/config/franka_arm_param.yaml"/> 
+  </node>
+
+</launch>
