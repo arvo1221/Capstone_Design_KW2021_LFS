@@ -6,7 +6,7 @@ KF_drone_estimator::KF_drone_estimator()
 {
     A.resize(6,6);
     F.resize(6,6);
-    H.resize(6,6);
+    H.resize(3,6);
     Q.resize(6,6);
     R.resize(3,3);
     x_hat.resize(6,1);
@@ -18,8 +18,12 @@ KF_drone_estimator::KF_drone_estimator()
     mat_temp.resize(3,3);
     z.resize(3,1);
 
-    result_position.resize(3);
-    T_BO_result_position.resize(3);
+    result_position.resize(4);
+    result_position(0) = 1;
+    result_position(1) = 0;
+    result_position(2) = 0;
+    
+    T_BO_result_position.resize(4);
 
     ////////////////////////// Parameter Initialize //////////////////////////////
     m_dt = 0.;
@@ -38,12 +42,13 @@ KF_drone_estimator::KF_drone_estimator()
     call_kalman = false;
     thread_join = false;
 
-    A << 1, m_dt, 0, 0,0,0,
-        0, 1, 0, 0,0,0,
+    A << 1, m_dt, 0, 0, 0, 0,
+        0,  1,    0, 0, 0, 0,
         0, 0, 1, m_dt,0,0,
         0, 0, 0, 1,0,0,
         0, 0, 0, 0, 1, m_dt,
         0, 0, 0, 0, 0, 1;
+
     F << 1, 0.01, 0, 0,0,0,
         0, 1, 0, 0,0,0,
         0, 0, 1, 0.01,0,0,
@@ -52,8 +57,8 @@ KF_drone_estimator::KF_drone_estimator()
         0, 0, 0, 0, 0, 1;
 
     H << 1, 0, 0, 0, 0, 0,
-        0, 0, 1, 0, 0, 0,
-        0, 0, 0, 0, 1, 0;
+         0, 0, 1, 0, 0, 0,
+         0, 0, 0, 0, 1, 0;
 
     Q << (double)(0.00000001/4), (double)(0.000001/2), 0, 0, 0, 0,
         (double)(0.000001/2), 0.0001, 0, 0,0,0,
@@ -96,7 +101,7 @@ KF_drone_estimator::KF_drone_estimator()
 
     p = Eigen::Vector3f(-0.39365,0.050581,0.3829);
     R = Eigen::Quaternionf(-0.0302588,-0.0302562,0.706459,0.706459).toRotationMatrix();
-    rail_frame_link_ <<  R, p,
+    rail_frame_link_ <<  R.transpose(), -R.transpose()*p,
                         0,0,0 ,1;
 
     p = Eigen::Vector3f(-0.39135,0.023178,0.4224);
@@ -144,37 +149,6 @@ void KF_drone_estimator::AddObservation(Eigen::Vector3d postion)
     call_kalman = true;   
 }
 
-// void KF_drone_estimator::initModel()
-// {
-//     std::string urdf_absolute_path;
-// 	std::string mod_url = config_.urdf_path;
-
-//     if (config_.urdf_path.find("package://") == 0)
-// 	{
-// 		mod_url.erase(0, strlen("package://"));
-// 		size_t pos = mod_url.find("/");
-// 		if (pos == std::string::npos)
-// 		{
-// 			std::cout << "Could not parse package:// format into file:// format" << std::endl;;
-// 		}
-// 		std::string package = mod_url.substr(0, pos);
-// 		mod_url.erase(0, pos);
-// 		std::string package_path = ros::package::getPath(package);
-
-// 		if (package_path.empty())
-// 		{
-// 			std::cout << "Package does not exist" << std::endl;;
-// 		}
-
-// 		urdf_absolute_path =  package_path + mod_url;
-// 	}
-
-//     RigidBodyDynamics::Addons::URDFReadFromFile(urdf_absolute_path.c_str(), &rbdl_model_, false, false);
-//     rail_frame_end_id_ = rbdl_model_.GetBodyId((config_.chain_end).c_str());
-//     base_frame_start_id_ = rbdl_model_.GetBodyId((config_.chain_start).c_str());
-// }
-
-
 void KF_drone_estimator::excute_timerThread()
 {
     while(!thread_join)
@@ -188,16 +162,12 @@ void KF_drone_estimator::excute_timerThread()
         if(call_kalman == true) {
             x_hat_t = x_hat;
             call_kalman = false;
-        }
-        else {
-            x_hat_t = F*x_hat_t;
-        }
-
-        result_position(0) = x_hat_t(0);
+        }result_position(0) = x_hat_t(0);
         result_position(1)= x_hat_t(2);
         result_position(2) = x_hat_t(4);
-        
-        T_BO_result_position = rail_frame_link_*result_position;
+        result_position(3) = 1;
+
+        T_BO_result_position = result_position; //rail_frame_link_*camera_frame_link_*
 
         Eigen::Vector3f rail_pos(rail_frame_link_(0,3), rail_frame_link_(1,3), rail_frame_link_(2,3));
         Eigen::Vector3f relative_pitch_pos(2.6947e-05,-0.00030225,0.156);
@@ -205,14 +175,17 @@ void KF_drone_estimator::excute_timerThread()
         double a =  sqrt( pow(T_BO_result_position(0),2) + pow(T_BO_result_position(2),2) );
         double b =  sqrt( pow(T_BO_result_position(0)-relative_pitch_pos(0),2) + pow(T_BO_result_position(2)-relative_pitch_pos(2),2) );
         double c =  sqrt( pow(relative_pitch_pos(0),2) + pow(relative_pitch_pos(2),2) );
+        double alpha = atan2(result_position(1),result_position(0));
         double gamma = acos( ( (b*b)+(c*c)-(a*a) )/2*b );
         double beta = atan2(result_position(2), sqrt(result_position(0)*result_position(0)+result_position(1)*result_position(1)));
         
         mutex_.lock();
-        target_Y = atan2(T_BO_result_position(0),T_BO_result_position(1));
+        target_Y = alpha;
         target_P = gamma;
-        target_tilt = beta;
+        target_tilt = beta;        
         mutex_.unlock();
-        std::this_thread::sleep_for(std::chrono::microseconds(500));
+        //std::cout << "Target_Y_in droneestimate = " << target_Y*180/M_PI << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }

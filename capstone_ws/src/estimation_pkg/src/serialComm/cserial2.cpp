@@ -47,6 +47,7 @@ void cserial2::Execute() {
       m_ser.write(m_sendPacket.buffer, sizeof(Packet2_t));
 
       //receive packet
+      /*
       readSize = m_ser.read(m_recvBuf, 4096);
 
      // std::cout << "Read : " << readSize << std::endl;
@@ -113,6 +114,8 @@ void cserial2::Execute() {
           }
 
         }
+
+        */
       }
 
 }

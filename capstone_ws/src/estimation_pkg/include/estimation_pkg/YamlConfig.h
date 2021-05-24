@@ -31,7 +31,7 @@ struct YAMLConfig
   std::vector<double> joint_limit_upper;
 
   std::vector<std::string> link_name;
-  std::vector<std::vector<double>> link_dimension;
-  std::vector<std::vector<double>> link_position;
-  std::vector<std::vector<double>> link_orientation;
+  std::vector< std::vector<double> > link_dimension;
+  std::vector< std::vector<double> > link_position;
+  std::vector< std::vector<double> > link_orientation;
 };

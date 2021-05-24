@@ -16,32 +16,13 @@
 #include <Eigen/QR>
 
 // ros Header
-#include <ros/ros.h>
 #include <ros/time.h>
-#include <ros/package.h>
-#include <ros/node_handle.h>
-
-// // RBDL Set
-// #include "../estimation_pkg/YamlConfig.h"
-// #include <urdf/model.h>
-// #include <rbdl/rbdl.h>
-// #include <rbdl/addons/urdfreader/urdfreader.h>
-
-// //tracker IK includes
-// #include <boost/date_time.hpp>
-// #include <trac_ik/trac_ik.hpp>
-// #include <kdl/chainiksolverpos_nr_jl.hpp>
-// #include <kdl_parser/kdl_parser.hpp>
-// #include <kdl/chainfksolverpos_recursive.hpp>
-// #include <kdl/chainiksolvervel_pinv.hpp>
-
-// using namespace RigidBodyDynamics;
 
 class KF_drone_estimator
 {
     public:
     KF_drone_estimator();
-    ~KF_drone_estimator();
+    ~KF_drone_estimator(){};
 
     void AddObservation(Eigen::Vector3d);
     
@@ -54,29 +35,11 @@ class KF_drone_estimator
     // atomic operator 사용 --> C++20 부터 double , float 지원
     void excute_timerThread();
 
-    // void initModel();
-
     //////   public params //////////////////////////////////////////////
-
-    ///// CAD Model Sturcture //////////////////////////////////////////
-    
-    // YAMLConfig config_;
-    // Model rbdl_model_;
-	// unsigned int rail_frame_end_id_;
-	// unsigned int base_frame_start_id_;
-    // Eigen::Vector3d rail_frame_end_;
-	// Eigen::Vector3d base_frame_start_;
-    // std::string urdf_param_;
-
-    // KDL::JntArray IK_lb, IK_ub;
-	// KDL::Chain IK_chain;
-	// KDL::Tree IK_tree;
-  	// urdf::Model IK_robot_model;
 
     private:
 
     /////   parameter  ///////////////////////////////////////
-
     double m_dt;
     double m_dt_old;
     double m_xf;
@@ -122,6 +85,6 @@ class KF_drone_estimator
     Eigen::MatrixXf camera_pitch_frame_link_;
     Eigen::MatrixXf camera_frame_link_;
 
-    Eigen::Vector3f result_position;
-    Eigen::Vector3f T_BO_result_position;
+    Eigen::VectorXf result_position;
+    Eigen::VectorXf T_BO_result_position;
 };

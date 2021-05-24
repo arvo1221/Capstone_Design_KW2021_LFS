@@ -18,18 +18,21 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/JointState.h>
 
 // msgs filter
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 
 // custom Header
-#include "../include/estimation_pkg/drone_estimator.hpp"
+#include "drone_estimator.hpp"
 
 //serial Comm
 #include "../include/estimation_pkg/serialComm/serial_turret.hpp"
 #include "../include/estimation_pkg/serialComm/cserial.h"
 #include "../include/estimation_pkg/serialComm/cserial2.h"
+
+
 class turret_controller_interface
 {
     public:
@@ -41,6 +44,7 @@ class turret_controller_interface
     inline void OpenTurretSerial(std::string port, int baudrate) {Turret_serial_.Open(port,baudrate);};
     inline void OpenCameraSerial(std::string port, int baudrate) {Camera_serial_.Open(port,baudrate);};
     
+    void killProcess();
 
     //////   rosCallback   //////////////////////////////////////////////
 
@@ -48,11 +52,15 @@ class turret_controller_interface
    // void object_track();
 
     //////   public params //////////////////////////////////////////////
+
+
     private:
+
+    /////    Method //////////////////////
 
     int thread_num;
 
-    bool Cam_objtrack;
+    bool thread_condition;
 
     //////  private params //////////////////////////////////////////////
     ros::Rate rate_;

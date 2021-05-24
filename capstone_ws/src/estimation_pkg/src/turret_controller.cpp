@@ -11,7 +11,7 @@ turret_controller_interface::turret_controller_interface(ros::NodeHandle &nh_,do
 
     /////////  subsciber  ////////////////////////////////
 
-    yolo_detection_sub = nh_.subscribe("/darknet_ros_3d/bounding_boxes",1, &turret_controller_interface::vision_cb, this);
+    yolo_detection_sub = nh_.subscribe("/darknet_ros_3d/bounding_boxes",10, &turret_controller_interface::vision_cb, this);
 
     ////////  msgs filter Sub ////////////////////////////
 
@@ -21,10 +21,15 @@ turret_controller_interface::turret_controller_interface(ros::NodeHandle &nh_,do
     // sync = &message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::CameraInfo>(aligned_image_sub,aligned_info_sub,10);
     // sync->registerCallback(boost::bind(&turret_controller_interface::object_track, _1, _2));
 
-    ///////    parmeter Initialize ////////////////////////
-    droneConfig.resize(4);
+    // nh_.param("robot_description", robot_desc_string, std::string());
+    // joint_name ={"base_link","Yaw_Link","Rail_Link","Pitch_Link"
+    //             ,"Camera_Pitch_Link","Camera_Link"};
 
-    Cam_objtrack  = false;
+    ///////    parmeter Initialize ////////////////////////
+
+    droneConfig.resize(4);
+    thread_num = 2;
+    thread_condition  = false;
 
     //////     set Thread         /////////////////////////
 
@@ -34,35 +39,63 @@ turret_controller_interface::turret_controller_interface(ros::NodeHandle &nh_,do
 
 turret_controller_interface::~turret_controller_interface()
 {
+    thread_condition = true;
     position_estimator.setTheadCondition(true);
-    threads.at(0).join();
+    for(auto & thread : threads)
+    {   
+        thread.join();
+    }
 }
 
 void turret_controller_interface::vision_cb(const gb_visual_detection_3d_msgs::BoundingBoxes3dConstPtr &pose)
 {
     // at least one object detected by YOLO KF filter estimate pose
-    if(pose->bounding_boxes.size() <= 0)
+    if(pose->bounding_boxes.size() <= 0){
+        std::cout<< "callback not ok " << std::endl;
         return;
-    
+    }   
+   // std::cout<< "callback ok 1" << std::endl;
     Eigen::Vector3d curConfig;
     curConfig.resize(3);
 
     curConfig(0) = (pose->bounding_boxes.at(0).xmax + pose->bounding_boxes.at(0).xmin)/2.;
-    curConfig(1) = (pose->bounding_boxes.at(0).xmax + pose->bounding_boxes.at(0).xmin)/2.;
-    curConfig(2) = (pose->bounding_boxes.at(0).xmax + pose->bounding_boxes.at(0).xmin)/2.;
+    curConfig(1) = (pose->bounding_boxes.at(0).ymax + pose->bounding_boxes.at(0).ymin)/2.;
+    curConfig(2) = (pose->bounding_boxes.at(0).zmax + pose->bounding_boxes.at(0).zmin)/2.;
+       // std::cout<< "callback ok 2" << std::endl;
 
     position_estimator.AddObservation(curConfig);
 }
 void turret_controller_interface::SerailThread() {
-    Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();
-    Turret_serial_.m_target.position_P = position_estimator.getTarget_P();
-    Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
-    
-    Turret_serial_.Execute();
-    Camera_serial_.Execute();
+    while(!thread_condition)
+    {
+        Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();
+        Turret_serial_.m_target.position_P = position_estimator.getTarget_P();
+        Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
+        
+        Turret_serial_.Execute();
+        Camera_serial_.Execute();
+        static int count;
+        if(count % 10){
+            count = 0;
+            std::cout<< Turret_serial_.m_sendPacket.data.pos_Y << std::endl;
+         //   std::cout<< Turret_serial_.m_sendPacket.data.pos_P << std::endl;
+            std::cout << "Target_pos_Y = " << Turret_serial_.m_target.position_Y << std::endl;
+        }
+        count++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
+    }
 }
 
+void turret_controller_interface::killProcess()
+{
+    thread_condition = true;
+    position_estimator.setTheadCondition(true);
+    for(auto & thread : threads)
+    {   
+        thread.join();
+    }
+}
 
 /*
 void turret_controller_interface::object_track()
