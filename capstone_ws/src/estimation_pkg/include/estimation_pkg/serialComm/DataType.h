@@ -23,8 +23,8 @@ typedef struct _controlData {
 
 typedef struct _packet_data {
 
-	unsigned char size, id;
 	unsigned char header[4];
+	unsigned char size, id;
 	unsigned char mode, check;
 
   int pos_Y;

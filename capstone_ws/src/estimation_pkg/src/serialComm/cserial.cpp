@@ -4,11 +4,12 @@ cserial::cserial(){
   m_target.position_P = 0;
   m_target.velocity_P = 10;
   m_target.position_Y = 0;
-  m_target.velocity_Y = 10;
+  m_target.velocity_Y = 40;
   m_sendPacket.data.header[0] = m_sendPacket.data.header[1] = m_sendPacket.data.header[2] = m_sendPacket.data.header[3] = 0xFE;
     m_sendPacket.data.id = 1;
     m_sendPacket.data.mode = 2;
     m_sendPacket.data.size = sizeof(Packet_t);
+    
 }
 
 cserial::~cserial(){
@@ -38,9 +39,10 @@ void cserial::Execute() {
     if (m_ser.isOpen()) {
 
       m_sendPacket.data.check = 0;
-      m_sendPacket.data.pos_Y = m_target.position_Y*1000;
+      m_sendPacket.data.size = sizeof(Packet_t);
+      m_sendPacket.data.pos_Y = m_target.position_Y*180/M_PI*1000;
       m_sendPacket.data.velo_Y = m_target.velocity_Y*1000;
-      m_sendPacket.data.pos_P = m_target.position_P*1000;
+      m_sendPacket.data.pos_P = -m_target.position_P*1000;
       m_sendPacket.data.velo_P = m_target.velocity_P*1000;
 
       //checkbit ����
@@ -48,12 +50,11 @@ void cserial::Execute() {
         m_sendPacket.data.check += m_sendPacket.buffer[i];
       //packet �߼�
       m_ser.write(m_sendPacket.buffer, sizeof(Packet_t));
-
-      //receive packet
-      /*
+     
+      //receive packet 
       readSize = m_ser.read(m_recvBuf, 4096);
 
-     // std::cout << "Read : " << readSize << std::endl;
+      //std::cout << "Read : " << readSize << std::endl;
      // std::cout << "rev : " << m_recvBuf[0] << std::endl;
 
 
@@ -62,7 +63,7 @@ void cserial::Execute() {
         switch (mode) {
 
         case 0:
-      //    std::cout << "Case 0 " << std::endl;
+        //  std::cout << "Case 0 " << std::endl;
 
           if (m_recvBuf[i] == 0xFE) {//������Ŷ 4�� �������� Ȯ���� mode1�� ����
             checkSize++;
@@ -87,18 +88,18 @@ void cserial::Execute() {
           break;
 
         case 2:
-         // std::cout << "Case 2 " << std::endl;
+          //std::cout << "Case 2 " << std::endl;
 
           //��Ŷ pos,vel,cur�� ������ ����
           m_packet.buffer[checkSize++] = m_recvBuf[i];
           check += m_recvBuf[i];	// check sum
 
           if (checkSize == m_packet.data.size) {
-           // std::cout << "size ok" << std::endl;
+            //std::cout << "size ok" << std::endl;
 
             if (check == m_packet.data.check) {			// check bit Ȯ��
-              std::cout << "posY" << m_packet.data.pos_Y << std::endl;
-              std::cout << "veloY" << m_packet.data.velo_Y << std::endl;
+              std::cout << "posY" << m_packet.data.pos_Y / 1000. << std::endl;
+              std::cout << "veloY" << m_packet.data.velo_Y / 1000.<< std::endl;
 
 
                 m_current.position_Y = m_packet.data.pos_Y / 1000.;		//get Motor Pos
@@ -117,7 +118,6 @@ void cserial::Execute() {
 
         } //for end
 
-      */
       }
 
 }

@@ -73,6 +73,7 @@ class turret_controller_interface
 
     // Thread
     std::vector<std::thread> threads;
+    std::mutex mutex_;
     
     /////   ros publisher  //////////////////////////////////////////////
 

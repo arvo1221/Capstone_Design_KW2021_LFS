@@ -51,35 +51,53 @@ void turret_controller_interface::vision_cb(const gb_visual_detection_3d_msgs::B
 {
     // at least one object detected by YOLO KF filter estimate pose
     if(pose->bounding_boxes.size() <= 0){
-        std::cout<< "callback not ok " << std::endl;
+        //std::cout<< "callback not ok " << std::endl;
         return;
     }   
    // std::cout<< "callback ok 1" << std::endl;
-    Eigen::Vector3d curConfig;
-    curConfig.resize(3);
+    Eigen::Vector4f curConfig;
+    curConfig.resize(4);
 
     curConfig(0) = (pose->bounding_boxes.at(0).xmax + pose->bounding_boxes.at(0).xmin)/2.;
     curConfig(1) = (pose->bounding_boxes.at(0).ymax + pose->bounding_boxes.at(0).ymin)/2.;
     curConfig(2) = (pose->bounding_boxes.at(0).zmax + pose->bounding_boxes.at(0).zmin)/2.;
-       // std::cout<< "callback ok 2" << std::endl;
+    curConfig(3) = 1;
+
+    Eigen::Matrix4f T_BC = position_estimator.getWordTransform();
+
+    // T_BO = T_BC * T_CO
+    // std::cout<<"transform \n"<<T_BC<<std::endl;
+    curConfig = T_BC*curConfig;
+
+    //std::cout<<"position \n"<<curConfig.transpose()<<std::endl;
+    //std::cout << "artan ( y, x)" << atan2(curConfig(1),curConfig(0)) << std::endl;
+    // std::cout<< "callback ok 2" << std::endl;
 
     position_estimator.AddObservation(curConfig);
 }
 void turret_controller_interface::SerailThread() {
     while(!thread_condition)
     {
-        Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();
+        Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();//+Turret_serial_.m_current.position_Y * M_PI/180;
         Turret_serial_.m_target.position_P = position_estimator.getTarget_P();
         Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
         
         Turret_serial_.Execute();
         Camera_serial_.Execute();
+
+        mutex_.lock();
+        position_estimator.updateKinematics_Y(Turret_serial_.m_current.position_Y * M_PI/180);
+        position_estimator.updateKinematics_P(Turret_serial_.m_current.position_P * M_PI/180);
+        position_estimator.updateKinematics_Tilt(Camera_serial_.m_current.position_P * M_PI/180);
+        mutex_.unlock();
+
         static int count;
-        if(count % 10){
+        if(count % 30){
             count = 0;
-            std::cout<< Turret_serial_.m_sendPacket.data.pos_Y << std::endl;
+           // std::cout<< Turret_serial_.m_sendPacket.data.pos_Y*180/M_PI << std::endl;
          //   std::cout<< Turret_serial_.m_sendPacket.data.pos_P << std::endl;
-            std::cout << "Target_pos_Y = " << Turret_serial_.m_target.position_Y << std::endl;
+            std::cout << "Target_pos_Y = " << Turret_serial_.m_target.position_Y*180/M_PI << std::endl;
+            //std::cout << "Target_vel_Y = " << Turret_serial_.m_target.velocity_Y*180/M_PI << std::endl;
         }
         count++;
         std::this_thread::sleep_for(std::chrono::milliseconds(50));

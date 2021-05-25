@@ -18,13 +18,19 @@
 // ros Header
 #include <ros/time.h>
 
+// KDL header
+#include <kdl/chain.hpp>
+#include <kdl/chainfksolver.hpp>
+#include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/frames_io.hpp>
+
 class KF_drone_estimator
 {
     public:
     KF_drone_estimator();
     ~KF_drone_estimator(){};
 
-    void AddObservation(Eigen::Vector3d);
+    void AddObservation(Eigen::Vector4f postion);
     
     inline void setTheadCondition(bool sig){ thread_join = sig; };
 
@@ -32,12 +38,27 @@ class KF_drone_estimator
     inline double getTarget_Y(){ return target_Y; };
     inline double getTarget_P(){ return target_P; };
     inline double getTarget_Tilt(){return target_tilt;};
+    inline Eigen::Matrix4f getWordTransform(){return T_BC;};
+
+    inline void updateKinematics_Y(double _Y_val)
+    {  
+        cam_joint_val_(0)  = _Y_val; 
+        rail_joint_val_(0) = _Y_val;
+    };
+    inline void updateKinematics_P(double _P_val){  rail_joint_val_(1) = _P_val; };
+    inline void updateKinematics_Tilt(double _tilt_val){ cam_joint_val_(1) = _tilt_val;};
+
+    //////////////////////////////////////////////////////////////////
+
     // atomic operator 사용 --> C++20 부터 double , float 지원
     void excute_timerThread();
 
     //////   public params //////////////////////////////////////////////
 
     private:
+
+    // Utils
+    Eigen::Matrix4f Frame2Eigen(KDL::Frame &frame);
 
     /////   parameter  ///////////////////////////////////////
     double m_dt;
@@ -54,10 +75,12 @@ class KF_drone_estimator
 
     int cnt_;
     int old_cnt_;
+    int lost_cnt;
 
     std::mutex mutex_;
 
     bool call_kalman;
+    bool call_lost;
     bool thread_join;
 
     double target_Y;
@@ -65,7 +88,7 @@ class KF_drone_estimator
     double target_tilt;
 
     Eigen::MatrixXd A;
-    Eigen::MatrixXd F;
+    Eigen::MatrixXd A_hat;
     Eigen::MatrixXd H;
     Eigen::MatrixXd Q;
     Eigen::MatrixXd R;
@@ -78,13 +101,26 @@ class KF_drone_estimator
     Eigen::MatrixXd mat_temp;
     Eigen::MatrixXd z;
 
-    // Hardware Frames
-    Eigen::MatrixXf base_frame_link_;
-    Eigen::MatrixXf rail_frame_link_;
-    Eigen::MatrixXf pitch_frame_link_;
-    Eigen::MatrixXf camera_pitch_frame_link_;
-    Eigen::MatrixXf camera_frame_link_;
 
+    Eigen::Matrix4f T_BC;
+
+    // Hardware Frames
     Eigen::VectorXf result_position;
     Eigen::VectorXf T_BO_result_position;
+
+    KDL::Chain cam_chain_;
+    KDL::JntArray cam_joint_val_;
+
+    KDL::Chain rail_chain_;
+    KDL::JntArray rail_joint_val_;
+
+
+    KDL::Rotation rot_;
+    KDL::Frame base_frame_;
+    KDL::Frame yaw_frame_;
+    KDL::Frame rail_frame_;
+    KDL::Frame pitch_frame_;
+    KDL::Frame cam_pitch_frame_;
+    KDL::Frame cam_frame_;
+
 };
