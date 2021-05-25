@@ -44,9 +44,20 @@ class KF_drone_estimator
     {  
         cam_joint_val_(0)  = _Y_val; 
         rail_joint_val_(0) = _Y_val;
+        UpdateKinematics();
     };
-    inline void updateKinematics_P(double _P_val){  rail_joint_val_(1) = _P_val; };
-    inline void updateKinematics_Tilt(double _tilt_val){ cam_joint_val_(1) = _tilt_val;};
+
+    inline void updateKinematics_P(double _P_val)
+    {  
+        rail_joint_val_(1) = _P_val;
+        UpdateKinematics(); 
+    };
+
+    inline void updateKinematics_Tilt(double _tilt_val)
+    { 
+        cam_joint_val_(1) = _tilt_val;
+        UpdateKinematics();
+    };
 
     //////////////////////////////////////////////////////////////////
 
@@ -59,6 +70,7 @@ class KF_drone_estimator
 
     // Utils
     Eigen::Matrix4f Frame2Eigen(KDL::Frame &frame);
+    void UpdateKinematics();
 
     /////   parameter  ///////////////////////////////////////
     double m_dt;

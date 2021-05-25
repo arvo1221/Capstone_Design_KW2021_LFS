@@ -267,6 +267,20 @@ Eigen::Matrix4f KF_drone_estimator::Frame2Eigen(KDL::Frame &frame)
     return H_trans;
 }
 
+void KF_drone_estimator::UpdateKinematics()
+{
+    KDL::ChainFkSolverPos_recursive camFksolver = KDL::ChainFkSolverPos_recursive(cam_chain_);
+    KDL::ChainFkSolverPos_recursive railFksolver = KDL::ChainFkSolverPos_recursive(rail_chain_);
+
+    KDL::Frame T_BC_frame;
+    KDL::Frame T_BP_frame;
+    KDL::Frame T_BR_frame;
+
+    if(camFksolver.JntToCart(cam_joint_val_,T_BC_frame)<0)
+        std::cerr<<"Update Kinematics Failed"<<std::endl;
+
+    T_BC = Frame2Eigen(T_BC_frame);
+}
 void KF_drone_estimator::excute_timerThread()
 {
     while(!thread_join)
@@ -307,13 +321,6 @@ void KF_drone_estimator::excute_timerThread()
         // std::cout<<"rail_joint_Val"<<rail_joint_val_.data.transpose()<<std::endl;
 
         /////////////////////////////Base to Drone
-
-        if(camFksolver.JntToCart(cam_joint_val_,T_BC_frame)<0)
-           std::cerr<<"Fk no solution exist"<<std::endl;
-        
-        mutex_.lock();
-        T_BC = Frame2Eigen(T_BC_frame);
-        mutex_.unlock();
 
         //std::cout<<"mat T_BC \n"<<T_BC<<std::endl;
 
