@@ -2,9 +2,9 @@
 
 cserial::cserial(){
   m_target.position_P = 0;
-  m_target.velocity_P = 10;
+  m_target.velocity_P = 25;
   m_target.position_Y = 0;
-  m_target.velocity_Y = 40;
+  m_target.velocity_Y = 90;
   m_sendPacket.data.header[0] = m_sendPacket.data.header[1] = m_sendPacket.data.header[2] = m_sendPacket.data.header[3] = 0xFE;
     m_sendPacket.data.id = 1;
     m_sendPacket.data.mode = 2;

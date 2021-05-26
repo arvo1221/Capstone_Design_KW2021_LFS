@@ -26,7 +26,8 @@ turret_controller_interface::turret_controller_interface(ros::NodeHandle &nh_,do
     //             ,"Camera_Pitch_Link","Camera_Link"};
 
     ///////    parmeter Initialize ////////////////////////
-
+    curConfig.resize(4);
+    preConfig.resize(4);
     droneConfig.resize(4);
     thread_num = 2;
     thread_condition  = false;
@@ -53,31 +54,49 @@ void turret_controller_interface::vision_cb(const gb_visual_detection_3d_msgs::B
     if(pose->bounding_boxes.size() <= 0){
         //std::cout<< "callback not ok " << std::endl;
         return;
-    }   
+    }
+
    // std::cout<< "callback ok 1" << std::endl;
-    Eigen::Vector4f curConfig;
-    curConfig.resize(4);
-
-    curConfig(0) = (pose->bounding_boxes.at(0).xmax + pose->bounding_boxes.at(0).xmin)/2.;
-    curConfig(1) = (pose->bounding_boxes.at(0).ymax + pose->bounding_boxes.at(0).ymin)/2.;
-    curConfig(2) = (pose->bounding_boxes.at(0).zmax + pose->bounding_boxes.at(0).zmin)/2.;
-    curConfig(3) = 1;
-
     Eigen::Matrix4f T_BC = position_estimator.getWordTransform();
+    double min_dist = 5e3;
+    int idx = 0;
+
+    for(unsigned int i = 0; i < pose->bounding_boxes.size(); i++)
+    {
+        curConfig(0) = (pose->bounding_boxes.at(i).xmax + pose->bounding_boxes.at(i).xmin)/2.;
+        curConfig(1) = (pose->bounding_boxes.at(i).ymax + pose->bounding_boxes.at(i).ymin)/2.;
+        curConfig(2) = (pose->bounding_boxes.at(i).zmax + pose->bounding_boxes.at(i).zmin)/2.;
+        curConfig(3) = 1;
+
+        double dist = (preConfig - T_BC*curConfig).norm();
+
+        if(dist < min_dist)
+        {
+            min_dist = dist;
+            idx = i;
+        }
+    }
+
+    curConfig(0) = (pose->bounding_boxes.at(idx).xmax + pose->bounding_boxes.at(idx).xmin)/2.;
+    curConfig(1) = (pose->bounding_boxes.at(idx).ymax + pose->bounding_boxes.at(idx).ymin)/2.;
+    curConfig(2) = (pose->bounding_boxes.at(idx).zmax + pose->bounding_boxes.at(idx).zmin)/2.;
+    curConfig(3) = 1;
 
     // T_BO = T_BC * T_CO
     // std::cout<<"transform \n"<<T_BC<<std::endl;
     curConfig = T_BC*curConfig;
-
+    preConfig = curConfig;
     //std::cout<<"position \n"<<curConfig.transpose()<<std::endl;
     //std::cout << "artan ( y, x)" << atan2(curConfig(1),curConfig(0)) << std::endl;
     // std::cout<< "callback ok 2" << std::endl;
 
     position_estimator.AddObservation(curConfig);
 }
-void turret_controller_interface::SerailThread() {
+
+void turret_controller_interface::SerailThread() {  
     while(!thread_condition)
     {
+        //Turret_serial_.m_target.position_Y = atan2(curConfig(1),curConfig(0));
         Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();//+Turret_serial_.m_current.position_Y * M_PI/180;
         Turret_serial_.m_target.position_P = position_estimator.getTarget_P();
         Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();

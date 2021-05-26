@@ -74,7 +74,9 @@ class turret_controller_interface
     // Thread
     std::vector<std::thread> threads;
     std::mutex mutex_;
-    
+
+    Eigen::Vector4f curConfig;
+    Eigen::Vector4f preConfig;
     /////   ros publisher  //////////////////////////////////////////////
 
     ros::Publisher visualization_pub_;

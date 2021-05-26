@@ -280,11 +280,14 @@ void KF_drone_estimator::UpdateKinematics()
         std::cerr<<"Update Kinematics Failed"<<std::endl;
 
     T_BC = Frame2Eigen(T_BC_frame);
+    
 }
+
 void KF_drone_estimator::excute_timerThread()
 {
     while(!thread_join)
     {
+        std::chrono::system_clock::time_point thread_start = std::chrono::system_clock::now();
         cnt_++;
 
         if(cnt_ > 30000) {
@@ -310,65 +313,16 @@ void KF_drone_estimator::excute_timerThread()
         result_position(2) = x_hat_t(4);
         result_position(3) = 1;
 
-        KDL::ChainFkSolverPos_recursive camFksolver = KDL::ChainFkSolverPos_recursive(cam_chain_);
-        KDL::ChainFkSolverPos_recursive railFksolver = KDL::ChainFkSolverPos_recursive(rail_chain_);
-
-        KDL::Frame T_BC_frame;
-        KDL::Frame T_BP_frame;
-        KDL::Frame T_BR_frame;
-        
-        // std::cout<<"cam_joint_Val"<<cam_joint_val_.data.transpose()<<std::endl;
-        // std::cout<<"rail_joint_Val"<<rail_joint_val_.data.transpose()<<std::endl;
-
-        /////////////////////////////Base to Drone
-
-        //std::cout<<"mat T_BC \n"<<T_BC<<std::endl;
-
-        T_BO_result_position = result_position; //4*4 matrix
-
-        // std::cout<<"T_BC :"<<T_BC<<std::endl;
-        ////////////////////////////Rail to Drone
-        if(camFksolver.JntToCart(rail_joint_val_,T_BR_frame) < 0)
-           std::cerr<<"Fk no solution exist"<<std::endl;
-        
-        Eigen::Matrix4f T_BR = Frame2Eigen(T_BR_frame);
-
-        Eigen::Matrix4f T_RB;
-        T_RB.block(0,0,3,3) = T_BR.block(0,0,3,3).inverse();
-        T_RB.block(0,3,3,1) = -T_BR.block(0,0,3,3).inverse()* T_BR.block(0,3,3,1);
-        T_RB(3,0) = 0; T_RB(3,1) = 0; T_RB(3,2) = 0; T_RB(3,3) = 1;
-
-        Eigen::VectorXf T_RO_result_position;
-        
-        T_RO_result_position = T_RB*T_BO_result_position;
-
-        // std::cout<<"result Pose(T_RO) :"<<T_RO_result_position.transpose()<<std::endl;
-        // std::cout<<"result Pose(T_CO) :"<<result_position.transpose()<<std::endl;
-
-        ///////////////////////////Base to Pitch
-
-        if(camFksolver.JntToCart(rail_joint_val_,T_BP_frame,3)<0)
-           std::cerr<<"Fk no solution exist"<<std::endl;
-        
-        Eigen::Matrix4f T_BP = Frame2Eigen(T_BP_frame);
-
-        ///////////////////////////Pitch to Rail
-        Eigen::Matrix4f T_PB;
-        T_PB << T_BP.block(0,0,3,3).inverse(), 
-               -T_BP.block(0,0,3,3).inverse()* T_BP.block(0,3,3,1)
-               ,0,0,0,1;
-
-        Eigen::Matrix4f T_PR = T_PB* T_BR;
-
-        Eigen::VectorXf T_PO_result_position =  T_PR * T_RO_result_position;
-
-        double a =  sqrt( pow(T_RO_result_position(0),2) + pow(T_RO_result_position(2),2) );
-        double b =  sqrt( pow(T_RO_result_position(0)-T_PR(0,3),2) + pow(T_RO_result_position(2)-T_PR(2,3),2) );
-        double c =  sqrt( pow(T_PO_result_position(2),2) + pow(T_PO_result_position(0),2));
-
-        double alpha = atan2(T_BO_result_position(1),T_BO_result_position(0));
-        double gamma = acos( ( (b*b)+(c*c)-(a*a) )/2*b );
-        double beta = atan2(result_position(2), sqrt(result_position(0)*result_position(0)+result_position(1)*result_position(1)));
+        double a = sqrt(result_position(0)*result_position(0)+(result_position(2)-0.3794)*(result_position(2)-0.3794));
+         double alpha =  atan2(result_position(1),result_position(0));
+        double gamma ;
+        if(result_position(2) == 0.3794){
+            gamma = 0;
+        }
+        else{
+            gamma = M_PI - atan2(result_position(0),result_position(2)-0.3794)-acos(0.0395/a);//acos( ( (b*b)+(c*c)-(a*a) )/2*b );
+        }
+        double beta = 0;//atan2(result_position(2), sqrt(result_position(0)*result_position(0)+result_position(1)*result_position(1)));
         
         // std::cout<< "Y  : "<<alpha<<std::endl;
         // std::cout<< "P  : "<<gamma<<std::endl;
@@ -382,7 +336,8 @@ void KF_drone_estimator::excute_timerThread()
 
         mutex_.unlock();
         //std::cout << "Target_Y_in droneestimate = " << target_Y*180/M_PI << std::endl;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::chrono::duration<double> sec = std::chrono::milliseconds(50) 
+                                    + thread_start - std::chrono::system_clock::now();
+        std::this_thread::sleep_for(sec);
     }
 }
