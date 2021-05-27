@@ -10,9 +10,11 @@
 #include "cstdlib"
 #include "math.h"
 #include "stdio.h"
-#include "../include/estimation_pkg/serialComm/DataType.h"
-#include "../include/estimation_pkg/serialComm/DataType2.h"
 
+#include "../include/estimation_pkg/serialComm/DataType.h"
+#include "../include/estimation_pkg/serialComm/t_serial.h"
+
+#include <chrono>
 class cserial {
   // Define ////////////////////////////////////////////////////////
   public:
@@ -28,6 +30,7 @@ class cserial {
     // Summury	: Standard constructor
     ////////////////////////////////////////////////////////////////////////////////////////////
     cserial();
+
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,23 +80,16 @@ class cserial {
     unsigned char m_recvBuf[4096];
     unsigned char m_writeBuf[4096];
 
-    //Turret's pitch & yaw motor control
     Packet_t m_sendPacket;
     Packet_t m_packet;
 
     ControlData_t m_target, m_current;
-    
-    //Camera motor & shooting 
-    Packet2_t m_sendPacket2;
-    Packet2_t m_packet2;
-
-    ControlData2_t m_target2, m_current2;   
 
   protected:
 
   private:
-    serial::Serial m_ser;
-    
+    //serial::Serial m_ser;
+    t_serial m_ser;
 };
 
 

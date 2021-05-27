@@ -96,29 +96,37 @@ void turret_controller_interface::vision_cb(const gb_visual_detection_3d_msgs::B
 void turret_controller_interface::SerailThread() {  
     while(!thread_condition)
     {
-        //Turret_serial_.m_target.position_Y = atan2(curConfig(1),curConfig(0));
-        Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();//+Turret_serial_.m_current.position_Y * M_PI/180;
-        Turret_serial_.m_target.position_P = position_estimator.getTarget_P();
+
+        std::chrono::system_clock::time_point thread_start = std::chrono::system_clock::now();
+
+        //Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();//+Turret_serial_.m_current.position_Y * M_PI/180;
+        Turret_serial_.m_target.position_Y = atan2(curConfig(1),curConfig(0))*180./M_PI;
+        Turret_serial_.m_target.position_P = -position_estimator.getTarget_P()*180./M_PI;
         Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
         
-        Turret_serial_.Execute();
-        Camera_serial_.Execute();
+        std::chrono::duration<double> sec = std::chrono::system_clock::now() -  thread_start;
 
-        mutex_.lock();
+        Turret_serial_.Execute();
+        
+        Camera_serial_.Execute();
+        //mutex_.lock();
         position_estimator.updateKinematics_Y(Turret_serial_.m_current.position_Y * M_PI/180);
         position_estimator.updateKinematics_P(Turret_serial_.m_current.position_P * M_PI/180);
         position_estimator.updateKinematics_Tilt(Camera_serial_.m_current.position_P * M_PI/180);
-        mutex_.unlock();
+        //mutex_.unlock();
 
         static int count;
-        if(count % 30){
+        if(count % 5 == 0){
             count = 0;
            // std::cout<< Turret_serial_.m_sendPacket.data.pos_Y*180/M_PI << std::endl;
          //   std::cout<< Turret_serial_.m_sendPacket.data.pos_P << std::endl;
             std::cout << "Target_pos_Y = " << Turret_serial_.m_target.position_Y*180/M_PI << std::endl;
-            //std::cout << "Target_vel_Y = " << Turret_serial_.m_target.velocity_Y*180/M_PI << std::endl;
+            std::cout << "Target_vel_P = " << Turret_serial_.m_target.position_P*180/M_PI << std::endl;
         }
         count++;
+       // std::chrono::duration<double> sec = std::chrono::milliseconds(50) 
+       //                             + thread_start - std::chrono::system_clock::now();
+     //   std::cout << "sec : " << sec.count() << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     }

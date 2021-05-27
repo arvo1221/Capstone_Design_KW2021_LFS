@@ -55,6 +55,8 @@ set(SRCS
   src/Kinematics.cpp
   src/serialComm/cserial.cpp
   src/serialComm/cserial2.cpp
+  #src/serialComm/Comm.cpp
+  src/serialComm/t_serial.cpp
   src/serialComm/serial_turret.cpp
   #src/main.cpp
 )
@@ -67,6 +69,8 @@ set(HEADS
   include/estimation_pkg/serialComm/DataType2.h
   include/estimation_pkg/serialComm/cserial.h
   include/estimation_pkg/serialComm/cserial2.h
+  include/estimation_pkg/serialComm/t_serial.h
+  #include/estimation_pkg/serialComm/Comm.h
   include/estimation_pkg/serialComm/serial_turret.hpp
 )
 add_library(turret_controller ${SRCS} ${HEADS})

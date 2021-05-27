@@ -76,7 +76,7 @@ class cserial2 {
   // Member ////////////////////////////////////////////////////////
   public:
     bool m_Open;
-    unsigned char m_recvBuf[4096];
+    unsigned char m_recvBuf[256];
     unsigned char m_writeBuf[4096];
     
     //Camera motor & shooting 
