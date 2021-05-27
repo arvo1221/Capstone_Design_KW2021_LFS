@@ -99,7 +99,7 @@ void turret_controller_interface::SerailThread() {
 
         std::chrono::system_clock::time_point thread_start = std::chrono::system_clock::now();
 
-        //Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y();//+Turret_serial_.m_current.position_Y * M_PI/180;
+        //Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y()*180./M_PI;//+Turret_serial_.m_current.position_Y * M_PI/180;
         Turret_serial_.m_target.position_Y = atan2(curConfig(1),curConfig(0))*180./M_PI;
         Turret_serial_.m_target.position_P = -position_estimator.getTarget_P()*180./M_PI;
         Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
