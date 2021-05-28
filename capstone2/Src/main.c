@@ -69,6 +69,8 @@ DMA_HandleTypeDef hdma_usart6_rx;
 #define pi 3.141592653589793
 #define get_dma_data_length() huart6.hdmarx->Instance->NDTR
 #define get_dma_total_size() huart6.RxXferSize
+#define shooting 100
+#define noshooting 0
 
 int32_t encoder_cnt_R = 0;
 int32_t encoder_cnt_pre_R = 0;
@@ -81,6 +83,7 @@ volatile double theta = 0;
 volatile uint16_t Motor_CCR_R = 0;
 volatile uint16_t shoot_degree = 0;
 volatile uint32_t timer = 0;
+volatile uint32_t shoot_timer = 0;
 
 volatile double Kpc = 0.9;//45.5672;
 volatile double Kic = 720;//8685.17;
@@ -142,7 +145,7 @@ volatile unsigned char g_head_pos;
 volatile unsigned char g_PacketMode;
 volatile unsigned char g_checkSize = 0;
 volatile unsigned char g_checksum;
-volatile unsigned char g_ID = 1;
+volatile unsigned char g_ID = 2;
 volatile Packet_t g_PacketBuffer;
 volatile Packet_t g_Tx_Packet;
 volatile uint8_t g_SendFlag;
@@ -202,19 +205,10 @@ void Uart_rx_dma_handler() {
           if (g_checksum == g_PacketBuffer.data.check){					// checksum check                 
             switch(g_PacketBuffer.data.mode){				// 모든게 올바르면, Get target position, Velocity limit Current Limit
               case 2:
-                rep_position = g_PacketBuffer.data.pos_P / 1000.;
+                rep_position = -g_PacketBuffer.data.pos_P / 1000.;
                 velocity_saturation = g_PacketBuffer.data.vel_P / 1000.;
                 shoot = g_PacketBuffer.data.shoot;
-                //g_SendFlag++;
                 break;
-               /*
-                g_Pdes_Y_display = g_PacketBuffer.data.pos_Y ;
-                g_Vlimit_Y_display = g_PacketBuffer.data.velo_Y ;                                   
-                g_Pdes_Y = g_PacketBuffer.data.pos_Y / 1000.;
-                g_Vlimit_Y = g_PacketBuffer.data.velo_Y / 1000.;
-                g_Pdes_P = g_PacketBuffer.data.pos_P / 1000.;
-                g_Vlimit_P = g_PacketBuffer.data.velo_P / 1000.;
-                break;*/
             }              
            }
            //초기화
@@ -232,20 +226,17 @@ void Uart_rx_dma_handler() {
     
     }//switch
   
-    if(g_SendFlag >= 5) {			
+    if(g_SendFlag >= 2) {			
       g_SendFlag = 0;
       
-      g_Tx_Packet.data.id= g_ID;//motor id 다만 이번과제에선 사용하지 않음
+      g_SendFlag = 0;
+      g_Tx_Packet.data.header[0] = g_Tx_Packet.data.header[1] = g_Tx_Packet.data.header[2] = g_Tx_Packet.data.header[3] = 0xFE;
+      g_Tx_Packet.data.id = g_ID;							//motor id 다만 이번과제에선 사용하지 않음
       g_Tx_Packet.data.size = sizeof(Packet_data_t);
-      g_Tx_Packet.data.mode = 0;//mode 3
+      g_Tx_Packet.data.mode = 3;//mode 3
       g_Tx_Packet.data.check = 0;
-      /*
-      g_Tx_Packet.data.pos_Y = g_Pcur_Y*1000;
-      g_Tx_Packet.data.velo_Y = g_Vcur_Y* 1000;
-      g_Tx_Packet.data.pos_P= 0.1 * 1000;
-      g_Tx_Packet.data.velo_P= 0.1 * 1000;
-      */
-      g_Tx_Packet.data.pos_P = theta * 1000.;
+       
+      g_Tx_Packet.data.pos_P = -theta * 1000.;
       g_Tx_Packet.data.vel_P = angular_velocity_R * 1000.;
       g_Tx_Packet.data.shoot = shoot;
       
@@ -351,7 +342,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
           Eis -= (double)(V_control + current_saturation)*Kas;
           V_control = -current_saturation;
         }
-        //timer = 0;
+        if(shoot == 1) {
+        shoot_timer++;
+        //shoot_degree =  shooting;
+        if(shoot_timer%100 == 0) {
+          //shoot_degree = noshooting;
+          shoot = 0;
+          shoot_timer = 0;
+          }
+        }
       }
       
       if(timer%10 == 0) {
