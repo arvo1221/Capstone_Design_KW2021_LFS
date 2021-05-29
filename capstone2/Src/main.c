@@ -53,15 +53,15 @@ DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
-TIM_HandleTypeDef htim9;
+TIM_HandleTypeDef htim11;
 
 UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart6_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-#define RX_BUFFER_SIZE 18
-#define TX_BUFFER_SIZE 12
+#define RX_BUFFER_SIZE 256
+#define TX_BUFFER_SIZE 256
 #define dt1 0.0005
 #define dt2 0.005
 #define dt3 0.05
@@ -69,8 +69,8 @@ DMA_HandleTypeDef hdma_usart6_rx;
 #define pi 3.141592653589793
 #define get_dma_data_length() huart6.hdmarx->Instance->NDTR
 #define get_dma_total_size() huart6.RxXferSize
-#define shooting 100
-#define noshooting 0
+#define shooting 6000
+#define noshooting 3000
 
 int32_t encoder_cnt_R = 0;
 int32_t encoder_cnt_pre_R = 0;
@@ -89,8 +89,8 @@ volatile double Kpc = 0.9;//45.5672;
 volatile double Kic = 720;//8685.17;
 
 volatile double Kac = 0;
-volatile double Kps = 0.7;//{20, 0};
-volatile double Kis = 5;//{30.24, 0};
+volatile double Kps = 0.7;//0.7
+volatile double Kis = 5;//5
 
 volatile double Kas = 0;
 volatile double Es = 0;
@@ -102,11 +102,11 @@ volatile double Ecurrent = 0;
 volatile double EScurrent = 0;
 volatile double C_control = 0;
 volatile double Motor_PWM = 0;
-volatile double current_saturation = 1.1;
+volatile double current_saturation = 1.5;
 
-volatile double Kpp = 8.0;//8.0
+volatile double Kpp = 6.5;//8.0
 volatile double Kip = 0;
-volatile double Kdp = 0.24;//0.248
+volatile double Kdp = 0.23;//0.248
 volatile double Kap = 0;
 volatile double Eposition = 0;
 volatile double ESposition = 0;
@@ -114,7 +114,7 @@ volatile double Edposition = 0;
 volatile double rep_position = 0;
 volatile double rep_degree = 0;
 volatile double P_control;
-volatile double velocity_saturation = 2.0;
+volatile double velocity_saturation = 2.5;
 
 volatile uint32_t adcVal[2];
 volatile uint32_t adcVal_pre;
@@ -134,24 +134,23 @@ int16_t watch_repp;
 int16_t watch_degree;
 
 uint8_t rx_dma_buffer[RX_BUFFER_SIZE];
+uint8_t rx_buffer[RX_BUFFER_SIZE];
+uint32_t rx_size = 0;
 uint8_t tx_buffer[TX_BUFFER_SIZE];
-volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
-volatile uint32_t rx_size = 0;
-volatile uint8_t tx_len;
-volatile uint16_t old_pos = 0;
-volatile uint16_t pos;
+uint8_t tx_len;
 volatile unsigned char g_tail_pos = 255;
 volatile unsigned char g_head_pos;
-volatile unsigned char g_PacketMode;
-volatile unsigned char g_checkSize = 0;
-volatile unsigned char g_checksum;
-volatile unsigned char g_ID = 2;
 volatile Packet_t g_PacketBuffer;
+volatile unsigned char g_PacketMode;
+volatile unsigned char g_ID=1;
+volatile unsigned char checkSize;
+volatile unsigned char g_checksum;
 volatile Packet_t g_Tx_Packet;
-volatile uint8_t g_SendFlag;
+volatile unsigned char g_Tx_checksum;
+volatile int g_SendFlag;
 
-volatile uint8_t shoot = 0;
-volatile uint16_t s = 0;
+
+volatile uint16_t shoot = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -163,7 +162,7 @@ static void MX_TIM3_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_TIM9_Init(void);
+static void MX_TIM11_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
@@ -179,78 +178,72 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Uart_rx_dma_handler() {
   uint8_t cnt;
   uint8_t i;
-  
+
   rx_size = 0;
-  g_head_pos = get_dma_total_size() - get_dma_data_length();
-  while(g_tail_pos != g_head_pos) {
-    switch(g_PacketMode) {
-      case 0:
-        if(rx_dma_buffer[g_tail_pos] == 0xFE) {//Header check
-          g_checkSize++;
-          if(g_checkSize == 4) g_PacketMode = 1; // header 4개가 다 들어왔으면 1번 모드로 변경 
-        }
-        else g_checkSize = 0;//초기화
-      break;
-      
-      case 1:
-        g_PacketBuffer.buffer[g_checkSize++] = rx_dma_buffer[g_tail_pos]; //checkSize 8될때 까지 g_PacketBuffer.buffer에 받아온 값 담기(size,mode,g_checksum)
-        if (g_checkSize == 8) g_PacketMode = 2;
-      break;
-      
-      case 2:
-        g_PacketBuffer.buffer[g_checkSize++] = rx_dma_buffer[g_tail_pos];
-        g_checksum += rx_dma_buffer[g_tail_pos];
-         
-        if (g_checkSize == g_PacketBuffer.data.size){					//data size만큼 버퍼읽음
-          if (g_checksum == g_PacketBuffer.data.check){					// checksum check                 
-            switch(g_PacketBuffer.data.mode){				// 모든게 올바르면, Get target position, Velocity limit Current Limit
-              case 2:
-                rep_position = -g_PacketBuffer.data.pos_P / 1000.;
-                velocity_saturation = g_PacketBuffer.data.vel_P / 1000.;
-                shoot = g_PacketBuffer.data.shoot;
-                break;
-            }              
-           }
-           //초기화
-           g_checksum = 0;						
-           g_PacketMode = 0;
-           g_checkSize = 0;
-        }
-        
-        else if(g_checkSize > g_PacketBuffer.data.size || g_checkSize > sizeof(Packet_t)){		//오류시 초기화
-         g_checksum = 0;
-         g_PacketMode = 0;
-         g_checkSize = 0;
-       }
-      
-    
-    }//switch
+  g_head_pos = huart6.RxXferSize - huart6.hdmarx->Instance->NDTR -1;
   
-    if(g_SendFlag >= 2) {			
-      g_SendFlag = 0;
-      
-      g_SendFlag = 0;
-      g_Tx_Packet.data.header[0] = g_Tx_Packet.data.header[1] = g_Tx_Packet.data.header[2] = g_Tx_Packet.data.header[3] = 0xFE;
-      g_Tx_Packet.data.id = g_ID;							//motor id 다만 이번과제에선 사용하지 않음
-      g_Tx_Packet.data.size = sizeof(Packet_data_t);
-      g_Tx_Packet.data.mode = 3;//mode 3
-      g_Tx_Packet.data.check = 0;
+  while(g_tail_pos != g_head_pos) {
+    switch (g_PacketMode) {
+      case 0:
+        if (rx_dma_buffer[g_tail_pos] == 0xFE) {//Header check
+          checkSize++;
+          if (checkSize == 4) g_PacketMode = 1;// header 4개가 다 들어왔으면 1번 모드로 변경
+        }
+        else checkSize = 0;	//초기화
+      break;
+      case 1:
+        g_PacketBuffer.buffer[checkSize++] = rx_dma_buffer[g_tail_pos]; //checkSize 8될때 까지 g_PacketBuffer.buffer에 받아온 값 담기(size,mode,g_checksum)
+        if (checkSize == 8) g_PacketMode = 2;
+      break;
+     
+      case 2:
+       g_PacketBuffer.buffer[checkSize++] = rx_dma_buffer[g_tail_pos];
+       g_checksum += rx_dma_buffer[g_tail_pos];
        
-      g_Tx_Packet.data.pos_P = -theta * 1000.;
-      g_Tx_Packet.data.vel_P = angular_velocity_R * 1000.;
-      g_Tx_Packet.data.shoot = shoot;
-      
-      for(int i = 8; i< sizeof(Packet_t);i++)		// checksum 제작
-      g_Tx_Packet.data.check += g_Tx_Packet.buffer[i];
-      
-      for(int i =0; i<g_Tx_Packet.data.size;i++){		//송신
-        tx_buffer[i] = g_Tx_Packet.buffer[i];
-      }
-      HAL_UART_Transmit(&huart6, tx_buffer, g_Tx_Packet.data.size,10);
-      s++;
+       if (checkSize == g_PacketBuffer.data.size){					//data size만큼 버퍼읽음
+         if (g_checksum == g_PacketBuffer.data.check){					// checksum check
+            switch(g_PacketBuffer.data.mode){				// 모든게 올바르면, Get target position, Velocity limit Current Limit
+               case 2:
+                 rep_degree = -g_PacketBuffer.data.pos_P/1000.;
+                 velocity_saturation = g_PacketBuffer.data.vel_P/1000.;
+                 shoot = g_PacketBuffer.data.shoot;
+               break;
+            }
+         }
+         //초기화
+         g_checksum = 0;						
+         g_PacketMode = 0;
+         checkSize = 0;              
+       }
+       else if(checkSize > g_PacketBuffer.data.size || checkSize > sizeof(Packet_t)){		//오류시 초기화
+           g_checksum = 0;
+           g_PacketMode = 0;
+           checkSize = 0;
+       }
+    }
+    
+     if(g_SendFlag >9) {			
+        g_SendFlag = 0;
+        g_Tx_Packet.data.header[0] = g_Tx_Packet.data.header[1] = g_Tx_Packet.data.header[2] = g_Tx_Packet.data.header[3] = 0xFE;
+        g_Tx_Packet.data.id = g_ID;							//motor id 다만 이번과제에선 사용하지 않음
+        g_Tx_Packet.data.size = sizeof(Packet_data_t);
+        g_Tx_Packet.data.mode = 3;						//mode 3
+        g_Tx_Packet.data.check = 0;
+        
+        g_Tx_Packet.data.pos_P = -theta*180/pi*1000;
+        g_Tx_Packet.data.vel_P = -angular_velocity_R* 1000;
+        g_Tx_Packet.data.shoot = shoot;
+        
+        for(int i = 8; i< sizeof(Packet_t);i++)		// checksum 제작
+        g_Tx_Packet.data.check += g_Tx_Packet.buffer[i];
+        
+        for(int i =0; i<g_Tx_Packet.data.size;i++){		//송신
+          tx_buffer[i] = g_Tx_Packet.buffer[i];
+        }
+        HAL_UART_Transmit(&huart6, tx_buffer, g_Tx_Packet.data.size,10);
     }
     g_tail_pos++;
-  }//while
+  }        
         
 }
 
@@ -284,7 +277,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     else if(mode ==2) {
       if(timer%1000 == 0) {
         
-        rep_position = (double)rep_degree*pi/180;
+        rep_position = (double)rep_degree*pi/180;//input degree output radian
         /*
         if(theta < -1 * pi) { 
           theta += 2.0*pi;
@@ -300,17 +293,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         }*/
         Edposition = Eposition;
         Eposition = (double)rep_position - theta;
-        ESposition += (double)Eposition;
+        //ESposition += (double)Eposition;
         //Kap = 1./(3*Kpp);
         P_control = (double)(Kpp * Eposition +/*Kip*ESposition*dt3 +*/ Kdp *(Eposition - Edposition)/dt3);
         
         if(P_control >= velocity_saturation) {
-          ESposition -= (double)(P_control - velocity_saturation)*Kap;
+          //ESposition -= (double)(P_control - velocity_saturation)*Kap;
           P_control = velocity_saturation;
         }
         else if(P_control <= -velocity_saturation) {
-          ESposition -= (double)(P_control + velocity_saturation)*Kap;
+          //ESposition -= (double)(P_control + velocity_saturation)*Kap;
           P_control = -velocity_saturation;
+        }
+        if(shoot == 1) {
+          shoot_timer++;
+          shoot_degree =  shooting;
+          if(shoot_timer%10 == 0) {
+            shoot_degree = noshooting;
+            shoot = 0;
+            shoot_timer = 0;
+            }
         }
       
         g_SendFlag++;
@@ -342,15 +344,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
           Eis -= (double)(V_control + current_saturation)*Kas;
           V_control = -current_saturation;
         }
-        if(shoot == 1) {
-        shoot_timer++;
-        //shoot_degree =  shooting;
-        if(shoot_timer%100 == 0) {
-          //shoot_degree = noshooting;
-          shoot = 0;
-          shoot_timer = 0;
-          }
-        }
+        
       }
       
       if(timer%10 == 0) {
@@ -376,7 +370,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
           C_control = -C_control;
         }
         else {
-          HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_RESET);
+         HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_RESET);
         }
       }
       
@@ -384,8 +378,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
       Motor_CCR_R = (uint16_t)Motor_PWM;
       //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_RESET);
     }
-    TIM9->CCR1 = Motor_CCR_R;
-    //TIM1->CCR1 = shoot_degree;
+    TIM4->CCR1 = Motor_CCR_R;
+    TIM11->CCR1 = shoot_degree;
     /*
     servomotor 20ms prescale 60 count 60000
     */
@@ -436,24 +430,24 @@ int main(void)
   MX_TIM2_Init();
   MX_USART6_UART_Init();
   MX_ADC1_Init();
-  MX_TIM9_Init();
+  MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim3,TIM_CHANNEL_ALL);
   Kac = 1./(2.1*Kpc);
-  Kas = 1./(1.0*Kps);
+  Kas = 1./(1.1*Kps);
   Kap = 1./(3*Kpp);
-  HAL_TIM_Base_Start_IT(&htim4);
   HAL_UART_Receive_DMA(&huart6, rx_dma_buffer, RX_BUFFER_SIZE);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   HAL_TIMEx_PWMN_Start(&htim4, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
-  HAL_TIMEx_PWMN_Start(&htim9, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim11, TIM_CHANNEL_1);
+  HAL_TIMEx_PWMN_Start(&htim11, TIM_CHANNEL_1);//3000 1ms
   //HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
   //HAL_TIMEx_PWMN_Start(&htim4, TIM_CHANNEL_2);
   //HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
   //HAL_TIM_Encoder_Start(&htim3,TIM_CHANNEL_ALL);
   //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_RESET);//Set CCW //RESET CW
+  HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_SET);//Set CCW //RESET CW
+  HAL_TIM_Base_Start_IT(&htim4);
   
   /* USER CODE END 2 */
 
@@ -698,30 +692,23 @@ static void MX_TIM4_Init(void)
 
 }
 
-/* TIM9 init function */
-static void MX_TIM9_Init(void)
+/* TIM11 init function */
+static void MX_TIM11_Init(void)
 {
 
-  TIM_ClockConfigTypeDef sClockSourceConfig;
   TIM_OC_InitTypeDef sConfigOC;
 
-  htim9.Instance = TIM9;
-  htim9.Init.Prescaler = 60-1;
-  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim9.Init.Period = 60000-1;
-  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
+  htim11.Instance = TIM11;
+  htim11.Init.Prescaler = 60-1;
+  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim11.Init.Period = 60000-1;
+  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-  if (HAL_TIM_PWM_Init(&htim9) != HAL_OK)
+  if (HAL_TIM_PWM_Init(&htim11) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -730,12 +717,12 @@ static void MX_TIM9_Init(void)
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim9, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim11, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  HAL_TIM_MspPostInit(&htim9);
+  HAL_TIM_MspPostInit(&htim11);
 
 }
 
