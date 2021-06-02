@@ -11,9 +11,17 @@ int main(int argc, char **argv)
 
     // YAMLConfig config;
     // config.loadConfig(yaml_path);
+    std::string port;
+    std::string port2;
+    int baudrate;
+
+    
+    nh.getParam("port",port);
+    nh.getParam("port2",port2);
+    nh.getParam("baudrate",baudrate);
 
     turret_controller_interface CommandCenter(nh, 10);
-    std::string port = "/dev/ttyUSB0";
+    //std::string port = "/dev/ttyUSB0";
    // std::string port2 = "/dev/ttyUSB1";
 
    // CommandCenter.OpenCameraSerial(port2,115200);

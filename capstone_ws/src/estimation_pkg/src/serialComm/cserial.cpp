@@ -2,9 +2,9 @@
 
 cserial::cserial(){
   m_target.position_P = 0;
-  m_target.velocity_P = 10;
-  m_target.position_Y = 10;
-  m_target.velocity_Y = 10;
+  m_target.velocity_P = 30;
+  m_target.position_Y = 0;
+  m_target.velocity_Y = 30;
   m_sendPacket.data.header[0] = m_sendPacket.data.header[1] = m_sendPacket.data.header[2] = m_sendPacket.data.header[3] = 0xFE;
     m_sendPacket.data.id = 1;
     m_sendPacket.data.mode = 2;
@@ -129,7 +129,7 @@ void cserial::Execute() {
 
         }
         std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
-      std::cout << "sec : " << sec.count() << std::endl;
+    //  std::cout << "sec_serial : " << sec.count() << std::endl;
       }
     else {
       std::cout << " Serial is not Open "<< std::endl;

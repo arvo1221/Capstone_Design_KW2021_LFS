@@ -67,6 +67,7 @@ class turret_controller_interface
 
     KF_drone_estimator position_estimator;
 
+    int turret_mode;
     // serial Comm
     cserial Turret_serial_;
     cserial2 Camera_serial_;

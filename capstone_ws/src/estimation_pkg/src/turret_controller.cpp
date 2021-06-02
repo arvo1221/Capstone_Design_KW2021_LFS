@@ -89,46 +89,62 @@ void turret_controller_interface::vision_cb(const gb_visual_detection_3d_msgs::B
     //std::cout<<"position \n"<<curConfig.transpose()<<std::endl;
     //std::cout << "artan ( y, x)" << atan2(curConfig(1),curConfig(0)) << std::endl;
     // std::cout<< "callback ok 2" << std::endl;
-
     position_estimator.AddObservation(curConfig);
+    if(turret_mode ==0) turret_mode = 1;
 }
 
 void turret_controller_interface::SerailThread() {  
     while(!thread_condition)
     {
-
         std::chrono::system_clock::time_point thread_start = std::chrono::system_clock::now();
+        static int count;
 
-        //Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y()*180./M_PI;//+Turret_serial_.m_current.position_Y * M_PI/180;
-        Turret_serial_.m_target.position_Y = atan2(curConfig(1),curConfig(0))*180./M_PI;
-        Turret_serial_.m_target.position_P = -position_estimator.getTarget_P()*180./M_PI;
-        Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
-        
-        std::chrono::duration<double> sec = std::chrono::system_clock::now() -  thread_start;
+        switch(turret_mode) {
+            case 0:             // stay 
+                if(count % 5 == 0){
+                   std::cout << "wating detect drone" << std::endl;
+                }
+            break;
+            case 1:             // tracking
+           Turret_serial_.m_target.position_Y = position_estimator.getTarget_Y()*180./M_PI;//+Turret_serial_.m_current.position_Y * M_PI/180;
+
+           // Turret_serial_.m_target.position_Y = atan2(curConfig(1),curConfig(0))*180./M_PI;
+            Turret_serial_.m_target.position_P = -position_estimator.getTarget_P()*180./M_PI;
+            Camera_serial_.m_target.position_P = position_estimator.getTarget_Tilt();
+            std::cout << "drone dected" << std::endl;
+            break;
+            case 2:             //  shooting
+            
+            //Camera_serial_.m_target.shooting 
+            break;
+            
+        }
+
 
         Turret_serial_.Execute();
-        
         Camera_serial_.Execute();
+
         //mutex_.lock();
         position_estimator.updateKinematics_Y(Turret_serial_.m_current.position_Y * M_PI/180);
         position_estimator.updateKinematics_P(Turret_serial_.m_current.position_P * M_PI/180);
         position_estimator.updateKinematics_Tilt(Camera_serial_.m_current.position_P * M_PI/180);
         //mutex_.unlock();
 
-        static int count;
         if(count % 5 == 0){
             count = 0;
            // std::cout<< Turret_serial_.m_sendPacket.data.pos_Y*180/M_PI << std::endl;
          //   std::cout<< Turret_serial_.m_sendPacket.data.pos_P << std::endl;
-            std::cout << "Target_pos_Y = " << Turret_serial_.m_target.position_Y*180/M_PI << std::endl;
-            std::cout << "Target_vel_P = " << Turret_serial_.m_target.position_P*180/M_PI << std::endl;
+            std::cout << "Target_pos_Y = " << Turret_serial_.m_target.position_Y << std::endl;
+            std::cout << "Target_vel_P = " << Turret_serial_.m_target.position_P<< std::endl;
         }
         count++;
-       // std::chrono::duration<double> sec = std::chrono::milliseconds(50) 
-       //                             + thread_start - std::chrono::system_clock::now();
-     //   std::cout << "sec : " << sec.count() << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::chrono::duration<double> sec = std::chrono::milliseconds(50) 
+                                    + thread_start - std::chrono::system_clock::now();
+        std::cout << "sec : " << sec.count() << std::endl;
 
+        if(sec.count() >= 0 ) std::this_thread::sleep_for(sec);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            ///sdfasdfasf
     }
 }
 

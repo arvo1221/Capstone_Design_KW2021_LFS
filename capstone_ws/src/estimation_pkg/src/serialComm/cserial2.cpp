@@ -2,7 +2,7 @@
 
 cserial2::cserial2(){
   m_target.position_P = 0;
-  m_target.velocity_P = 10;
+  m_target.velocity_P = 30;
   m_target.shooting = 0;
   m_sendPacket.data.header[0] = m_sendPacket.data.header[1] = m_sendPacket.data.header[2] = m_sendPacket.data.header[3] = 0xFE;
     m_sendPacket.data.id = 1;
@@ -14,18 +14,23 @@ cserial2::~cserial2(){
 
 }
 
+// bool cserial2::Open(std::string port, int baudrate){
+//   m_ser.setPort(port);
+//   m_ser.setBaudrate(baudrate);
+//   serial::Timeout to = serial::Timeout::simpleTimeout(100);
+//   m_ser.setTimeout(to);
+//   m_ser.open();
+//   m_Open = m_ser.isOpen();
+//   return m_Open;
+// }
 bool cserial2::Open(std::string port, int baudrate){
-  m_ser.setPort(port);
-  m_ser.setBaudrate(baudrate);
-  serial::Timeout to = serial::Timeout::simpleTimeout(100);
-  m_ser.setTimeout(to);
-  m_ser.open();
+  m_ser.Open(const_cast<char*>(port.c_str()), baudrate);
   m_Open = m_ser.isOpen();
   return m_Open;
 }
 
 bool cserial2::Close() {
-    m_ser.close();
+    m_ser.Close();
     m_Open = m_ser.isOpen();
     return m_Open;
 }
@@ -44,11 +49,11 @@ void cserial2::Execute() {
       for (int i = 8; i < sizeof(Packet2_t); i++)
         m_sendPacket.data.check += m_sendPacket.buffer[i];
       //packet �߼�
-      m_ser.write(m_sendPacket.buffer, sizeof(Packet2_t));
+      m_ser.Write(m_sendPacket.buffer, sizeof(Packet2_t));
 
       //receive packet
-      /*
-      readSize = m_ser.read(m_recvBuf, 4096);
+      
+      readSize = m_ser.Read(m_recvBuf, 4096);
 
      // std::cout << "Read : " << readSize << std::endl;
      // std::cout << "rev : " << m_recvBuf[0] << std::endl;
@@ -115,7 +120,7 @@ void cserial2::Execute() {
 
         }
 
-        */
+        
       }
 
 }

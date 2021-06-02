@@ -6,4 +6,14 @@
     <param name="port2" type="string" value="/dev/ttyUSB1" />
     <param name="baudrate" type="int" value="115200" />
   </node>
+
+   <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+   </include>
+
+​
+
+   <!-- Include darknet_ros launch file -->
+
+   <include file="$(find darknet_ros_3d)/launch/darknet_ros_3d.launch">
+   </include>
 </launch>

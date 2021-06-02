@@ -11,9 +11,8 @@
 #include "math.h"
 #include "stdio.h"
 #include "../include/estimation_pkg/serialComm/DataType2.h"
+#include "../include/estimation_pkg/serialComm/t_serial.h"
 
-#define Turret    0
-#define Camera    1
 
 class cserial2 {
   // Define ////////////////////////////////////////////////////////
@@ -88,8 +87,9 @@ class cserial2 {
   protected:
 
   private:
-    serial::Serial m_ser;
-    
+    //serial::Serial m_ser;
+    t_serial m_ser;
+
 };
 
 
