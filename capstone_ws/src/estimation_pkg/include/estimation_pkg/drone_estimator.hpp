@@ -38,6 +38,7 @@ class KF_drone_estimator
     inline double getTarget_Y(){ return target_Y; };
     inline double getTarget_P(){ return target_P; };
     inline double getTarget_Tilt(){return target_tilt;};
+    inline int    getShoot() {return shoot;}; 
     inline Eigen::Matrix4f getWordTransform(){return T_BC;};
 
     inline void updateKinematics_Y(double _Y_val)
@@ -59,6 +60,8 @@ class KF_drone_estimator
         UpdateKinematics();
     };
 
+    inline int getMode() {return mode;};
+    
     //////////////////////////////////////////////////////////////////
 
     // atomic operator 사용 --> C++20 부터 double , float 지원
@@ -82,6 +85,7 @@ class KF_drone_estimator
     unsigned int m_cnt;
     unsigned int m_old_cnt;
 
+    int mode;
     // 나중에 스레드 활용시 사용
     //std::atomic<int> cnt_{0};
 
@@ -98,9 +102,11 @@ class KF_drone_estimator
     double target_Y;
     double target_P;
     double target_tilt;
+    int    shoot;
 
     Eigen::MatrixXd A;
     Eigen::MatrixXd A_hat;
+    Eigen::MatrixXd A_shoot;
     Eigen::MatrixXd H;
     Eigen::MatrixXd Q;
     Eigen::MatrixXd R;

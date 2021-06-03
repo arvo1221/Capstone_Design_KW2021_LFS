@@ -24,8 +24,9 @@ int main(int argc, char **argv)
     //std::string port = "/dev/ttyUSB0";
    // std::string port2 = "/dev/ttyUSB1";
 
-   // CommandCenter.OpenCameraSerial(port2,115200);
     CommandCenter.OpenTurretSerial(port,115200);
+    CommandCenter.OpenCameraSerial(port2,115200);
+
     while(ros::ok()){
         ros::spinOnce();
     }

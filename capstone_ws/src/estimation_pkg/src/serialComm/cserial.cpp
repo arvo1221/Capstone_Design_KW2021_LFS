@@ -110,10 +110,10 @@ void cserial::Execute() {
                 m_current.position_P = m_packet.data.pos_P / 1000.;		//get Motor Pos
                 //m_current.velocity_P = m_packet.data.velo_P / 1000.;		//get Motor Vel
 
-                std::cout << "posY" << m_current.position_Y << std::endl;
-                std::cout << "veloY" << m_current.velocity_Y << std::endl;
-                std::cout << "posP" << m_current.position_P << std::endl;
-                std::cout << "veloP" << m_current.velocity_P << std::endl;
+              //  std::cout << "Yaw deg : " << m_current.position_Y << std::endl;
+               // std::cout << "veloY" << m_current.velocity_Y << std::endl;
+              //  std::cout << "Pitch deg : " << m_current.position_P << std::endl;
+               // std::cout << "veloP" << m_current.velocity_P << std::endl;
 
 
               }
@@ -129,7 +129,7 @@ void cserial::Execute() {
 
         }
         std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
-    //  std::cout << "sec_serial : " << sec.count() << std::endl;
+     // std::cout << "sec_serial : " << sec.count() << std::endl;
       }
     else {
       std::cout << " Serial is not Open "<< std::endl;

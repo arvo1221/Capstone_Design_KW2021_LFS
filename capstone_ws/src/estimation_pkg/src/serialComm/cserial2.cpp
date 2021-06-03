@@ -104,8 +104,8 @@ void cserial2::Execute() {
                 m_current.position_P = m_packet.data.pos_P / 1000.;		//get Motor Pos
                 m_current.velocity_P = m_packet.data.velo_P / 1000.;		//get Motor Vel
                 m_current.shooting = m_packet.data.shoot;
-                std::cout << "posY" << m_packet.data.pos_P/1000 << std::endl;
-                std::cout << "veloY" << m_packet.data.velo_P/1000 << std::endl;
+               // std::cout << "posY" << m_packet.data.pos_P/1000 << std::endl;
+              //  std::cout << "Shoot state : " << m_packet.data.shoot << std::endl;
 
               }
 

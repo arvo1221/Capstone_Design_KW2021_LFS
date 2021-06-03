@@ -6,6 +6,7 @@ KF_drone_estimator::KF_drone_estimator()
 {
     A.resize(6,6);
     A_hat.resize(6,6);
+    A_shoot.resize(6,6);
     H.resize(3,6);
     Q.resize(6,6);
     R.resize(3,3);
@@ -17,7 +18,7 @@ KF_drone_estimator::KF_drone_estimator()
     K.resize(6,3);
     mat_temp.resize(3,3);
     z.resize(3,1);
-
+    
     T_BC.resize(4,4);
     
     result_position.resize(4);
@@ -47,6 +48,8 @@ KF_drone_estimator::KF_drone_estimator()
     call_lost = false;
     thread_join = false;
 
+    mode = 0;
+
     A << 1, m_dt, 0, 0, 0, 0,
         0,  1,    0, 0, 0, 0,
         0, 0, 1, m_dt,0,0,
@@ -59,6 +62,13 @@ KF_drone_estimator::KF_drone_estimator()
             0, 0, 1, 0.05,0,0,
             0, 0, 0, 1,0,0,
             0, 0, 0, 0, 1, 0.05,
+            0, 0, 0, 0, 0, 1;
+
+    A_shoot << 1, 0.25, 0, 0, 0, 0,
+            0,  1,    0, 0, 0, 0,
+            0, 0, 1, 0.25,0,0,
+            0, 0, 0, 1,0,0,
+            0, 0, 0, 0, 1, 0.25,
             0, 0, 0, 0, 0, 1;
 
     H << 1, 0, 0, 0, 0, 0,
@@ -212,6 +222,7 @@ KF_drone_estimator::KF_drone_estimator()
 
 void KF_drone_estimator::AddObservation(Eigen::Vector4f postion)
 {
+    if(mode == 0) mode = 1;
     m_dt = (double)0.05*(cnt_ - old_cnt_);
     old_cnt_ = cnt_;
 
@@ -300,14 +311,53 @@ void KF_drone_estimator::excute_timerThread()
             //std::cout<< "lost drone" << std::endl;
             if(lost_cnt > 20000) lost_cnt = 10000;
         }*/
-        if(call_kalman == true) {
-            x_hat_t = x_hat;
-            call_kalman = false;
-        }
-        else{
-            x_hat_t = A_hat * x_hat_t;
-        }
+        switch (mode)
+        {
+            case 0:                 //nothing
+                x_hat_t = x_hat_t;
+            break;
+            case 1:                 // tracking
+                shoot = 0;
+                static int track_cnt = 0;
+                if(call_kalman == true) {
+                    x_hat_t = x_hat;
+                    call_kalman = false;
+                }
+                else{
+                    x_hat_t = A_hat * x_hat_t;
+                }
+                if(abs(target_P - rail_joint_val_(1)) <= 0.015 && abs(target_Y - rail_joint_val_(0)) <= 0.015){
+                    track_cnt++;
+                    if(track_cnt ==60){
+                        mode = 2;
+                    }
+                }
+            break;
+            case 2:                 //shooting - 1
+                x_hat_t = A_shoot * x_hat_t;
+                mode = 3;
+                
+            break;
+            case 3:
+                if(call_kalman == true) {
+                    x_hat_t = x_hat;
+                    call_kalman = false;
+                }
+                else{
+                    x_hat_t = A_hat * x_hat_t;
+                }
+                static int shoot_time = 1;
+                if(shoot_time == 5) {
+                    shoot = 1;
+                }
+                else if(shoot_time ==20){
+                    mode =1;
+                }
+                shoot_time++;
+            break;
 
+        }
+        
         result_position(0) = x_hat_t(0);
         result_position(1)= x_hat_t(2);
         result_position(2) = x_hat_t(4);
@@ -320,7 +370,7 @@ void KF_drone_estimator::excute_timerThread()
             gamma = 0;
         }
         else{
-            gamma = M_PI - atan2(result_position(0),result_position(2)-0.3794)-acos(0.0395/a);//acos( ( (b*b)+(c*c)-(a*a) )/2*b );
+            gamma = M_PI - atan2(result_position(0),result_position(2)-0.3794)-acos(0.0245/a);//acos( ( (b*b)+(c*c)-(a*a) )/2*b );
         }
         double beta = 0;//atan2(result_position(2), sqrt(result_position(0)*result_position(0)+result_position(1)*result_position(1)));
         
@@ -330,7 +380,7 @@ void KF_drone_estimator::excute_timerThread()
 
         mutex_.lock();
 
-        target_Y = alpha;
+        target_Y = alpha-0.062;
         target_P = gamma;
         target_tilt = beta;
 
