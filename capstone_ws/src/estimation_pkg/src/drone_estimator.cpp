@@ -338,7 +338,7 @@ void KF_drone_estimator::excute_timerThread()
                 mode = 3;
                 
             break;
-            case 3:
+            case 3:                 //shootint - 2
                 if(call_kalman == true) {
                     x_hat_t = x_hat;
                     call_kalman = false;
