@@ -1,25 +1,25 @@
-"D:\git\Capstone_Design\capstone2\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_gpio.c"
+"C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_gpio.c"
 -std=c11
 -ferror-limit=0
 -fbracket-depth=512
 -funsigned-char
 -MD
 -MF
-D:\git\Capstone_Design\capstone2\EWARM\capstone2\BrowseInfo\Drivers\STM32F4xx_HAL_Driver\stm32f4xx_hal_gpio.pbi.dep
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM\capstone2\BrowseInfo\Drivers\STM32F4xx_HAL_Driver\stm32f4xx_hal_gpio.pbi.dep
 -o
-D:\git\Capstone_Design\capstone2\EWARM\capstone2\BrowseInfo\Drivers\STM32F4xx_HAL_Driver\stm32f4xx_hal_gpio.pbi
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM\capstone2\BrowseInfo\Drivers\STM32F4xx_HAL_Driver\stm32f4xx_hal_gpio.pbi
 -I
-D:\git\Capstone_Design\capstone2\Drivers\STM32F4xx_HAL_Driver\Src
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\Drivers\STM32F4xx_HAL_Driver\Src
 -I
-D:\git\Capstone_Design\capstone2\EWARM/../Inc
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM/../Inc\
 -I
-D:\git\Capstone_Design\capstone2\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\
 -I
-D:\git\Capstone_Design\capstone2\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy\
 -I
-D:\git\Capstone_Design\capstone2\EWARM/../Drivers/CMSIS/Device/ST/STM32F4xx/Include
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM/../Drivers/CMSIS/Device/ST/STM32F4xx/Include\
 -I
-D:\git\Capstone_Design\capstone2\EWARM/../Drivers/CMSIS/Include
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM/../Drivers/CMSIS/Include\
 -I
 C:\Program Files\IAR Systems\Embedded Workbench 9.0\arm\CMSIS\Core\Include\
 -I
@@ -31,15 +31,15 @@ C:\Program Files\IAR Systems\Embedded Workbench 9.0\arm\inc
 -I
 C:\Program Files\IAR Systems\Embedded Workbench 9.0\arm\inc\c
 -I
-D:\git\Capstone_Design\capstone2\Inc
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\Inc
 -I
-D:\git\Capstone_Design\capstone2\Drivers\STM32F4xx_HAL_Driver\Inc
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\Drivers\STM32F4xx_HAL_Driver\Inc
 -I
-D:\git\Capstone_Design\capstone2\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy
 -I
-D:\git\Capstone_Design\capstone2\Drivers\CMSIS\Device\ST\STM32F4xx\Include
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\Drivers\CMSIS\Device\ST\STM32F4xx\Include
 -I
-D:\git\Capstone_Design\capstone2\Drivers\CMSIS\Include
+C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\Drivers\CMSIS\Include
 -I
 C:\Program Files\IAR Systems\Embedded Workbench 9.0\arm\CMSIS\Core\Include
 -I

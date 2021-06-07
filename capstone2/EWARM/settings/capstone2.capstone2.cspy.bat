@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\git\Capstone_Design\capstone2\EWARM\settings\capstone2.capstone2.general.xcl" --backend -f "D:\git\Capstone_Design\capstone2\EWARM\settings\capstone2.capstone2.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM\settings\capstone2.capstone2.general.xcl" --backend -f "C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM\settings\capstone2.capstone2.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\git\Capstone_Design\capstone2\EWARM\settings\capstone2.capstone2.general.xcl" "--debug_file=%~1" --backend -f "D:\git\Capstone_Design\capstone2\EWARM\settings\capstone2.capstone2.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM\settings\capstone2.capstone2.general.xcl" "--debug_file=%~1" --backend -f "C:\Users\Robpang\Downloads\Capstone_Design_KW2021_LFS-main (2)\capstone2\EWARM\settings\capstone2.capstone2.driver.xcl" 
 
 @echo off 
 :end
