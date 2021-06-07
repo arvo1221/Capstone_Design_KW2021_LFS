@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<JScopeProject>
+    <FileVersion major="1" minor="1" />
+    <Project>
+        <Configuration>
+            <JLink>
+                <Options IsRTTSession="0" IsRTTWithTimeStamp="1" SamplingPeriod="100" Connection="1" SerialNo="0" IP="" TargetDevice="unspecified" TargetInterface="JTAG" InterfaceSpeed="4000" />
+            </JLink>
+            <ElfFile Name="C:\Users\Robpang\Documents\STM32_test\EWARM\STM32_Test\Exe\STM32_Test.out" />
+            <DataFile Name="" />
+            <RawFile Name="" />
+            <Scope>
+                <Options TimeResolutionUs="500000" />
+            </Scope>
+            <Trigger>
+                <Options Level="0.000000" Symbol="encoder_cnt_Y" On="0" Auto="0" Rise="1" Fall="1" />
+            </Trigger>
+        </Configuration>
+        <Windows>
+            <Graph Show="1" />
+            <Watch Show="1" />
+        </Windows>
+        <SelectedSymbols>
+            <Symbol>
+                <Options Name="J_Vcur_Y" Address="0x20000410" Type="int" TypeID="12" Size="4" GraphColorRed="255" GraphColorGreen="215" GraphColorBlue="0" YMinSampled="0" YMaxSampled="2147483647" YAvgSampled="22831835" Offset="4" ShowInGraph="1" YOffset="200" IsAutoConfig="0" YResolution="100" MaxValue="2000000000" File="C:\Users\Robpang\Documents\STM32_test\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+            <Symbol>
+                <Options Name="J_Vdes_Y" Address="0x20000414" Type="int" TypeID="12" Size="4" GraphColorRed="0" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="0" YMaxSampled="120" YAvgSampled="34" Offset="8" ShowInGraph="1" YOffset="200" IsAutoConfig="1" YResolution="100" MaxValue="200" File="C:\Users\Robpang\Documents\STM32_test\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+            <Symbol>
+                <Options Name="encoder_cnt_Y" Address="0x20000408" Type="volatile uint" TypeID="8" Size="4" GraphColorRed="0" GraphColorGreen="0" GraphColorBlue="176" YMinSampled="0" YMaxSampled="-2147483648" YAvgSampled="2147315790" Offset="12" ShowInGraph="0" YOffset="200" IsAutoConfig="0" YResolution="1000000000" MaxValue="2000000000" File="C:\Users\Robpang\Documents\STM32_test\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+        </SelectedSymbols>
+    </Project>
+</JScopeProject>

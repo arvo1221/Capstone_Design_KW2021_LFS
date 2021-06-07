@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<JScopeProject>
+    <FileVersion major="1" minor="1" />
+    <Project>
+        <Configuration>
+            <JLink>
+                <Options IsRTTSession="0" IsRTTWithTimeStamp="1" SamplingPeriod="100" Connection="1" SerialNo="0" IP="" TargetDevice="unspecified" TargetInterface="JTAG" InterfaceSpeed="50000" />
+            </JLink>
+            <ElfFile Name="C:\Users\Robpang\Documents\STM32\EWARM\STM32\Exe\STM32.out" />
+            <DataFile Name="" />
+            <RawFile Name="" />
+            <Scope>
+                <Options TimeResolutionUs="100000" />
+            </Scope>
+        </Configuration>
+        <Windows>
+            <Graph Show="1" />
+            <Watch Show="1" />
+        </Windows>
+        <SelectedSymbols>
+            <Symbol>
+                <Options Name="g_Climit_display" Address="0x20000460" Type="volatile int" TypeID="12" Size="4" GraphColorRed="0" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="1464" YMaxSampled="1464" YAvgSampled="1464" Offset="4" ShowInGraph="1" YOffset="200" IsAutoConfig="1" YResolution="1000" MaxValue="2000" File="C:\Users\Robpang\Documents\STM32\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+            <Symbol>
+                <Options Name="g_Pdes_display" Address="0x200002F0" Type="volatile int" TypeID="12" Size="4" GraphColorRed="0" GraphColorGreen="0" GraphColorBlue="176" YMinSampled="-33552968" YMaxSampled="1811873534" YAvgSampled="359967942" Offset="8" ShowInGraph="1" YOffset="200" IsAutoConfig="1" YResolution="1000000000" MaxValue="2000000000" File="C:\Users\Robpang\Documents\STM32\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+            <Symbol>
+                <Options Name="g_Vlimit_display" Address="0x200002F4" Type="volatile int" TypeID="12" Size="4" GraphColorRed="160" GraphColorGreen="32" GraphColorBlue="240" YMinSampled="-33552968" YMaxSampled="1811873534" YAvgSampled="358304583" Offset="12" ShowInGraph="1" YOffset="200" IsAutoConfig="1" YResolution="1000000000" MaxValue="2000000000" File="C:\Users\Robpang\Documents\STM32\Src\main.c" Scope="0" DrawStyle="0" />
+            </Symbol>
+        </SelectedSymbols>
+    </Project>
+</JScopeProject>
