@@ -17,3 +17,5 @@ Library  : PCL (at least 1.7) \
 # System Architecture
 ![캡스톤system아키텍처](https://user-images.githubusercontent.com/56678537/127337551-48a3376a-aa68-468e-8f15-83222c9371f0.jpg)
 
+#Video
+https://www.youtube.com/watch?v=N5EMGGjnUHE
